@@ -24,8 +24,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-@app.post("/files")
-async def upload_file(
+@app.post("/audio/process")
+async def upload_and_process_audio(
     file: UploadFile = File(...),
     client: Client = Depends(get_temporal_client),
     db: Session = Depends(get_db)
