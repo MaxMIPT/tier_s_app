@@ -1,46 +1,47 @@
 from botocore.exceptions import ClientError
+import uuid
+from fastapi import HTTPException, status
+from config import settings
 
 class MinioRepository:
     
     def __init__(self):
-        self.bucket_name = 'bucket'
-        
+        self.bucket_name = settings.minio.bucket_name
+
     async def upload_file(
             self,
             minio_client,
-            file_path: str,
+            file: str,
 
     ):
-        object_name = file_path.split("/")[-1]
+        object_name = str(uuid.uuid4())
+
         try:
             async with minio_client as client:
-                with open(file_path, "rb") as file:
                     await client.put_object(
                         Bucket=self.bucket_name,
                         Key=object_name,
                         Body=file,
                     )
-                print(f"File {object_name} uploaded to {self.bucket_name}")
+            return object_name
+        
         except ClientError as e:
-            print(f"Error uploading file: {e}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     async def delete_file(self, object_name: str, minio_client):
         try:
             async with minio_client as client:
                 await client.delete_object(Bucket=self.bucket_name, Key=object_name)
-                print(f"File {object_name} deleted from {self.bucket_name}")
         except ClientError as e:
-            print(f"Error deleting file: {e}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    async def get_file(self, object_name: str, destination_path: str, minio_client):
+    async def get_file(self, object_name: str, minio_client):
         try:
             async with minio_client as client:
                 response = await client.get_object(Bucket=self.bucket_name, Key=object_name)
                 data = await response["Body"].read()
-                with open(destination_path, "wb") as file:
-                    file.write(data)
-                print(f"File {object_name} downloaded to {destination_path}")
+                return data
         except ClientError as e:
-            print(f"Error downloading file: {e}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 minio_repo = MinioRepository()
