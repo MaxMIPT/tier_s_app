@@ -9,9 +9,11 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 from temporalio.client import Client
+from services.minio_service import minio_service
 
-from db import get_db
-from utils import get_temporal_client
+from clients.db_client import get_db
+from clients.temporal_client import get_temporal_client
+from clients.minio_client import minio_client
 
 
 @asynccontextmanager
@@ -21,16 +23,18 @@ async def lifespan(app: FastAPI):
     )
     yield
 
-
 app = FastAPI(lifespan=lifespan)
 
 @app.post("/audio/process")
 async def upload_and_process_audio(
     file: UploadFile = File(...),
     client: Client = Depends(get_temporal_client),
-    db: Session = Depends(get_db)
-):
-    file_name = str(uuid.uuid4())
+    # db: Session = Depends(get_db),
+    minio_client = Depends(minio_client.get_client)
+):  
+
+    file_name = await minio_service.add_new_file(minio_client, file, file.filename)
+
     await client.start_workflow(
         "TestWorkflow",
         args=[],
