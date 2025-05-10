@@ -32,7 +32,8 @@ async def upload_and_process_audio(
     # db: Session = Depends(get_db),
     minio_client = Depends(minio_client.get_client)
 ):  
-    file_name = await minio_service.add_new_file(minio_client, file)
+
+    file_name = await minio_service.add_new_file(minio_client, file, file.filename)
 
     await client.start_workflow(
         "TestWorkflow",

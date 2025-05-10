@@ -12,9 +12,10 @@ class MinioRepository:
             self,
             minio_client,
             file: str,
+            filename: str
 
     ):
-        object_name = str(uuid.uuid4())
+        object_name = str(uuid.uuid4()) + "." + filename.split(".")[-1]
 
         try:
             async with minio_client as client:
