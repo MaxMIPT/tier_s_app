@@ -5,6 +5,7 @@ from temporalio.worker import Worker
 
 from bar_workflow import TestWorkflow
 from foo_activity import worker_task
+import db_init
 
 async def main():
     client = await Client.connect("temporal:7233")

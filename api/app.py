@@ -12,7 +12,7 @@ from temporalio.client import Client
 
 from db import get_db
 from utils import get_temporal_client
-
+import db_init
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
