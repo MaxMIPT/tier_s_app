@@ -37,4 +37,5 @@ async def upload_and_process_audio(
         id=f"task_{file_name}",
         task_queue="first-queue"
     )
+
     return {"file": file_name}
