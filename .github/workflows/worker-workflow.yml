@@ -1,0 +1,107 @@
+name: Worker CI
+
+on:
+  push:
+    paths:
+      - 'worker/**'
+  pull_request:
+    paths:
+      - 'worker/**'
+
+env:
+  POETRY_VERSION: '1.6.1'
+  PYTHON_VERSION: '3.11'
+  VIRTUAL_ENV: '.venv'
+  SQL_HOST: ${{ secrets.WORKER_SQL_HOST }}
+  SQL_PORT: ${{ secrets.WORKER_SQL_PORT }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Create virtual environment
+        run: python -m venv ${{ env.VIRTUAL_ENV }}
+
+      - name: Install Poetry & dependencies
+        shell: bash
+        run: |
+          source ${{ env.VIRTUAL_ENV }}/bin/activate
+          pip install --upgrade pip
+          pip install poetry==${{ env.POETRY_VERSION }}
+          poetry install
+
+      - name: Cache virtual environment
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.VIRTUAL_ENV }}
+          key: ${{ runner.os }}-worker-venv-${{ hashFiles('worker/poetry.lock') }}
+
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run flake8
+        working-directory: worker
+        shell: bash
+        run: |
+          source ${{ env.VIRTUAL_ENV }}/bin/activate
+          poetry run flake8 --exclude ${{ env.VIRTUAL_ENV }} .
+
+  lint-ruff:
+    needs: setup
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run ruff
+        working-directory: worker
+        shell: bash
+        run: |
+          source ${{ env.VIRTUAL_ENV }}/bin/activate
+          poetry run ruff check . --exclude ${{ env.VIRTUAL_ENV }}
+
+  test:
+    needs: [ lint, lint-ruff ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run pytest
+        working-directory: worker
+        shell: bash
+        run: |
+          source ${{ env.VIRTUAL_ENV }}/bin/activate
+          poetry run pytest
+
+  build-and-push:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push Docker image
+        run: |
+          docker build \
+            --build-arg SQL_HOST=${{ env.SQL_HOST }} \
+            --build-arg SQL_PORT=${{ env.SQL_PORT }} \
+            -t ghcr.io/${{ github.repository_owner }}/worker:${{ github.sha }} \
+            -f worker/Dockerfile worker
+          docker push ghcr.io/${{ github.repository_owner }}/worker:${{ github.sha }}
