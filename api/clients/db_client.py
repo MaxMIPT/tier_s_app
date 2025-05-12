@@ -13,6 +13,7 @@ DATABASE_URL = f"postgresql+psycopg2://{user}:{password}@{db_host}:{db_port}/{db
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+
 def get_db():
     db = SessionLocal()
     try:
