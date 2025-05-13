@@ -12,6 +12,7 @@ env:
   POETRY_VERSION: '1.6.1'
   PYTHON_VERSION: '3.11'
   VIRTUAL_ENV: '.venv'
+
   DB_HOST: ${{ secrets.API_DB_HOST }}
   DB_PORT: ${{ secrets.API_DB_PORT }}
   DB_NAME: ${{ secrets.API_DB_NAME }}
@@ -28,15 +29,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Create virtual environment
+        working-directory: api
         run: python -m venv ${{ env.VIRTUAL_ENV }}
 
       - name: Install Poetry & dependencies
+        working-directory: api
         shell: bash
         run: |
           source ${{ env.VIRTUAL_ENV }}/bin/activate
@@ -47,7 +50,7 @@ jobs:
       - name: Cache virtual environment
         uses: actions/cache@v3
         with:
-          path: ${{ env.VIRTUAL_ENV }}
+          path: api/${{ env.VIRTUAL_ENV }}
           key: ${{ runner.os }}-api-venv-${{ hashFiles('api/poetry.lock') }}
 
   lint:

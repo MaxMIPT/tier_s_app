@@ -12,6 +12,7 @@ env:
   POETRY_VERSION: '1.6.1'
   PYTHON_VERSION: '3.11'
   VIRTUAL_ENV: '.venv'
+
   SQL_HOST: ${{ secrets.WORKER_SQL_HOST }}
   SQL_PORT: ${{ secrets.WORKER_SQL_PORT }}
 
@@ -21,15 +22,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Create virtual environment
+        working-directory: worker
         run: python -m venv ${{ env.VIRTUAL_ENV }}
 
       - name: Install Poetry & dependencies
+        working-directory: worker
         shell: bash
         run: |
           source ${{ env.VIRTUAL_ENV }}/bin/activate
@@ -40,7 +43,7 @@ jobs:
       - name: Cache virtual environment
         uses: actions/cache@v3
         with:
-          path: ${{ env.VIRTUAL_ENV }}
+          path: worker/${{ env.VIRTUAL_ENV }}
           key: ${{ runner.os }}-worker-venv-${{ hashFiles('worker/poetry.lock') }}
 
   lint:
