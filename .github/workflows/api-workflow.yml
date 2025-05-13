@@ -10,7 +10,7 @@ on:
 
 env:
   POETRY_VERSION: '1.6.1'
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.12'
   VIRTUAL_ENV: '.venv'
 
   DB_HOST: ${{ secrets.API_DB_HOST }}
