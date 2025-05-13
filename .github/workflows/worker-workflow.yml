@@ -52,7 +52,7 @@ jobs:
           pip install poetry==${{ env.POETRY_VERSION }}
 
       - name: Install dependencies
-        working-directory: api
+        working-directory: worker
         run: |
           poetry install --no-interaction --no-ansi    
 
