@@ -47,14 +47,29 @@ jobs:
           path: ~/.cache/pypoetry/virtualenvs
           key: ${{ runner.os }}-api-poetry-venv-${{ hashFiles('api/poetry.lock') }}
 
-  lint:
+  lint-flake8:
     needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - name: Run flake8
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
         working-directory: api
+        run: |
+          poetry install --no-interaction --no-ansi    
+
+      - name: Install Poetry
+        run: |
+          pip install --upgrade pip
+          pip install poetry==${{ env.POETRY_VERSION }}
+
+      - name: Run flake8
+        working-directory: worker
         run: poetry run flake8 .
 
   lint-ruff:
@@ -64,12 +79,27 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        working-directory: api
+        run: |
+          poetry install --no-interaction --no-ansi    
+
+      - name: Install Poetry
+        run: |
+          pip install --upgrade pip
+          pip install poetry==${{ env.POETRY_VERSION }}
+
       - name: Run ruff
         working-directory: api
         run: poetry run ruff check .
 
   test:
-    needs: [ lint, lint-ruff ]
+    needs: [ lint-flake8, lint-ruff ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
