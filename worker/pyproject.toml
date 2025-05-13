@@ -12,6 +12,21 @@ sqlalchemy = "^2.0"
 psycopg2-binary = "^2.9.10"
 asyncpg = "^0.29"
 
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.1.1"
+ruff = "^0.8.1"
+pytest = "^8.3.4"
+pytest-asyncio = "^0.25.0"
+pytest-cov = "^6.0.0"
+
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+flake8 = "^6.0.0"
+ruff = "^0.0.288"
+pytest = "^7.4.0"
+pytest-asyncio = "^0.25.0"
+pytest-cov = "^6.0.0"
