@@ -4,9 +4,6 @@ on:
   push:
     paths:
       - 'api/**'
-  pull_request:
-    paths:
-      - 'api/**'
 
 env:
   POETRY_VERSION: '1.6.1'
@@ -84,15 +81,15 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies
-        working-directory: api
-        run: |
-          poetry install --no-interaction --no-ansi    
-
       - name: Install Poetry
         run: |
           pip install --upgrade pip
           pip install poetry==${{ env.POETRY_VERSION }}
+
+      - name: Install dependencies
+        working-directory: api
+        run: |
+          poetry install --no-interaction --no-ansi    
 
       - name: Run ruff
         working-directory: api
