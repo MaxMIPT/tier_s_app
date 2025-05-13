@@ -2,8 +2,6 @@ name: Worker CI
 
 on:
   push:
-    paths:
-      - 'worker/**'
 
 env:
   POETRY_VERSION: '1.6.1'

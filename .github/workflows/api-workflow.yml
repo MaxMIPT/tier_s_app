@@ -2,8 +2,6 @@ name: API CI
 
 on:
   push:
-    paths:
-      - 'api/**'
 
 env:
   POETRY_VERSION: '1.6.1'
