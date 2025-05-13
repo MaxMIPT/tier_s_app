@@ -11,7 +11,6 @@ on:
 env:
   POETRY_VERSION: '1.6.1'
   PYTHON_VERSION: '3.12'
-  VIRTUAL_ENV: '.venv'
 
   SQL_HOST: ${{ secrets.WORKER_SQL_HOST }}
   SQL_PORT: ${{ secrets.WORKER_SQL_PORT }}
@@ -27,24 +26,19 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Create virtual environment
-        working-directory: worker
-        run: python -m venv ${{ env.VIRTUAL_ENV }}
-
       - name: Install Poetry & dependencies
         working-directory: worker
         shell: bash
         run: |
-          source ${{ env.VIRTUAL_ENV }}/bin/activate
           pip install --upgrade pip
           pip install poetry==${{ env.POETRY_VERSION }}
-          poetry install
+          poetry install --no-interaction --no-ansi
 
-      - name: Cache virtual environment
+      - name: Cache Poetry virtualenv
         uses: actions/cache@v3
         with:
-          path: worker/${{ env.VIRTUAL_ENV }}
-          key: ${{ runner.os }}-worker-venv-${{ hashFiles('worker/poetry.lock') }}
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-worker-poetry-venv-${{ hashFiles('worker/poetry.lock') }}
 
   lint:
     needs: setup
@@ -54,10 +48,7 @@ jobs:
 
       - name: Run flake8
         working-directory: worker
-        shell: bash
-        run: |
-          source ${{ env.VIRTUAL_ENV }}/bin/activate
-          poetry run flake8 --exclude ${{ env.VIRTUAL_ENV }} .
+        run: poetry run flake8 .
 
   lint-ruff:
     needs: setup
@@ -68,10 +59,7 @@ jobs:
 
       - name: Run ruff
         working-directory: worker
-        shell: bash
-        run: |
-          source ${{ env.VIRTUAL_ENV }}/bin/activate
-          poetry run ruff check . --exclude ${{ env.VIRTUAL_ENV }}
+        run: poetry run ruff check .
 
   test:
     needs: [ lint, lint-ruff ]
@@ -81,10 +69,7 @@ jobs:
 
       - name: Run pytest
         working-directory: worker
-        shell: bash
-        run: |
-          source ${{ env.VIRTUAL_ENV }}/bin/activate
-          poetry run pytest
+        run: poetry run pytest
 
   build-and-push:
     if: github.event_name == 'push'

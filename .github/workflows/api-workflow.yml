@@ -11,7 +11,6 @@ on:
 env:
   POETRY_VERSION: '1.6.1'
   PYTHON_VERSION: '3.12'
-  VIRTUAL_ENV: '.venv'
 
   DB_HOST: ${{ secrets.API_DB_HOST }}
   DB_PORT: ${{ secrets.API_DB_PORT }}
@@ -34,24 +33,19 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Create virtual environment
-        working-directory: api
-        run: python -m venv ${{ env.VIRTUAL_ENV }}
-
       - name: Install Poetry & dependencies
         working-directory: api
         shell: bash
         run: |
-          source ${{ env.VIRTUAL_ENV }}/bin/activate
           pip install --upgrade pip
           pip install poetry==${{ env.POETRY_VERSION }}
-          poetry install
+          poetry install --no-interaction --no-ansi
 
-      - name: Cache virtual environment
+      - name: Cache Poetry virtualenv
         uses: actions/cache@v3
         with:
-          path: api/${{ env.VIRTUAL_ENV }}
-          key: ${{ runner.os }}-api-venv-${{ hashFiles('api/poetry.lock') }}
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-api-poetry-venv-${{ hashFiles('api/poetry.lock') }}
 
   lint:
     needs: setup
@@ -61,10 +55,7 @@ jobs:
 
       - name: Run flake8
         working-directory: api
-        shell: bash
-        run: |
-          source ${{ env.VIRTUAL_ENV }}/bin/activate
-          poetry run flake8 --exclude ${{ env.VIRTUAL_ENV }} .
+        run: poetry run flake8 .
 
   lint-ruff:
     needs: setup
@@ -75,10 +66,7 @@ jobs:
 
       - name: Run ruff
         working-directory: api
-        shell: bash
-        run: |
-          source ${{ env.VIRTUAL_ENV }}/bin/activate
-          poetry run ruff check . --exclude ${{ env.VIRTUAL_ENV }}
+        run: poetry run ruff check .
 
   test:
     needs: [ lint, lint-ruff ]
@@ -88,10 +76,7 @@ jobs:
 
       - name: Run pytest
         working-directory: api
-        shell: bash
-        run: |
-          source ${{ env.VIRTUAL_ENV }}/bin/activate
-          poetry run pytest
+        run: poetry run pytest
 
   build-and-push:
     if: github.event_name == 'push'
