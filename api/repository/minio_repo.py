@@ -5,6 +5,7 @@ from config import settings
 from aiobotocore.session import ClientCreatorContext
 from io import BytesIO
 
+
 class MinioRepository:
 
     def __init__(self):
@@ -32,7 +33,7 @@ class MinioRepository:
         except ClientError:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    async def get_file(self, minio_client:ClientCreatorContext, object_name: str, ) -> None:
+    async def get_file(self, minio_client: ClientCreatorContext, object_name: str, ) -> None:
         try:
             async with minio_client as client:
                 response = await client.get_object(

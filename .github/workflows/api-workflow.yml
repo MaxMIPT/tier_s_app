@@ -1,0 +1,135 @@
+name: API CI
+
+on:
+  push:
+
+env:
+  POETRY_VERSION: '1.6.1'
+  PYTHON_VERSION: '3.12'
+
+  DB_HOST: ${{ secrets.API_DB_HOST }}
+  DB_PORT: ${{ secrets.API_DB_PORT }}
+  DB_NAME: ${{ secrets.API_DB_NAME }}
+  DB_USER: ${{ secrets.API_DB_USER }}
+  DB_PASSWORD: ${{ secrets.API_DB_PASSWORD }}
+  MINIO_ENDPOINT: ${{ secrets.API_MINIO_ENDPOINT }}
+  MINIO_ACCESS_KEY: ${{ secrets.API_MINIO_ACCESS_KEY }}
+  MINIO_SECRET_KEY: ${{ secrets.API_MINIO_SECRET_KEY }}
+  TEMPORAL_ADDRESS: ${{ secrets.API_TEMPORAL_ADDRESS }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry & dependencies
+        working-directory: api
+        shell: bash
+        run: |
+          pip install --upgrade pip
+          pip install poetry==${{ env.POETRY_VERSION }}
+          poetry install --no-interaction --no-ansi
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-api-poetry-venv-${{ hashFiles('api/poetry.lock') }}
+
+  lint-flake8:
+    needs: setup
+    runs-on: ubuntu-latest
+    continue-on-error: true # TODO: remove after fix
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          pip install --upgrade pip
+          pip install poetry==${{ env.POETRY_VERSION }}
+
+      - name: Install dependencies
+        working-directory: api
+        run: |
+          poetry install --no-interaction --no-ansi    
+
+      - name: Run flake8
+        working-directory: api
+        run: poetry run flake8 .
+
+  lint-ruff:
+    needs: setup
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          pip install --upgrade pip
+          pip install poetry==${{ env.POETRY_VERSION }}
+
+      - name: Install dependencies
+        working-directory: api
+        run: |
+          poetry install --no-interaction --no-ansi    
+
+      - name: Run ruff
+        working-directory: api
+        run: poetry run ruff check .
+
+  test:
+    needs: [ lint-flake8, lint-ruff ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run pytest
+        working-directory: api
+        run: poetry run pytest
+
+  build-and-push:
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push Docker image
+        run: |
+          docker build \
+            --build-arg DB_HOST=${{ env.DB_HOST }} \
+            --build-arg DB_PORT=${{ env.DB_PORT }} \
+            --build-arg DB_NAME=${{ env.DB_NAME }} \
+            --build-arg DB_USER=${{ env.DB_USER }} \
+            --build-arg DB_PASSWORD=${{ env.DB_PASSWORD }} \
+            --build-arg MINIO_ENDPOINT=${{ env.MINIO_ENDPOINT }} \
+            --build-arg MINIO_ACCESS_KEY=${{ env.MINIO_ACCESS_KEY }} \
+            --build-arg MINIO_SECRET_KEY=${{ env.MINIO_SECRET_KEY }} \
+            --build-arg TEMPORAL_ADDRESS=${{ env.TEMPORAL_ADDRESS }} \
+            -t ghcr.io/${{ github.repository_owner }}/api:${{ github.sha }} \
+            -f api/Dockerfile api
+          docker push ghcr.io/${{ github.repository_owner }}/api:${{ github.sha }}

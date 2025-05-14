@@ -3,6 +3,7 @@ from fastapi import HTTPException, status
 from aiobotocore.session import ClientCreatorContext
 from typing import Any
 
+
 class MinioService:
     async def add_new_file(self, minio_client: ClientCreatorContext, file: Any, filename: str) -> str:
         if not file.content_type.startswith("audio/"):
