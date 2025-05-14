@@ -6,6 +6,10 @@ from services.minio_service import minio_service
 from clients.temporal_client import get_temporal_client
 from clients.minio_client import minio_client
 
+from db import get_db
+from utils import get_temporal_client
+import db_init
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,4 +33,5 @@ async def upload_and_process_audio(
     await client.start_workflow(
         "TestWorkflow", args=[], id=f"task_{file_name}", task_queue="first-queue"
     )
+
     return {"file": file_name}
