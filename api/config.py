@@ -20,6 +20,7 @@ class MinioConfig(BaseModel):
 class Settings(BaseModel):
     db: DBConfig
     minio: MinioConfig
+    DATABASE_URL: str
 
 
 settings = Settings(
@@ -36,4 +37,5 @@ settings = Settings(
         bucket_name=os.environ.get("MINIO_BUCKET"),
         endpoint_url=os.environ.get("MINIO_ENDPOINT_URL"),
     ),
+    DATABASE_URL=os.environ.get("DATABASE_URL")
 )
