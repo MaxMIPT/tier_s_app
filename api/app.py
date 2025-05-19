@@ -1,17 +1,32 @@
+from uuid import uuid4
+
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI, UploadFile, File
+from fastapi import Depends, FastAPI, UploadFile, File, WebSocket
 from temporalio.client import Client
+
+from config import settings
+from db import init_db
+from minio import create_bucket
+from redis_client import subscribe
 
 from clients.temporal_client import get_temporal_client
 from clients.minio_client import minio_client
-from db import init_db
 from services.minio_service import minio_service
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    Выполняется перед запуском API приложения
+    :param app:
+    :return:
+    """
+    # подрубаемся к темпоралу
     app.state.temporal_client = await Client.connect("temporal:7233")
+    # инициализация схемы БД
     await init_db()
+    # создаем бакет в minio для хранения файлов
+    await create_bucket(bucket_name=settings.minio.bucket_name)
     yield
 
 
@@ -24,18 +39,28 @@ async def upload_and_process_audio(
     client: Client = Depends(get_temporal_client),
     minio_client=Depends(minio_client.get_client),
 ):
-
     file_name = await minio_service.add_new_file(
         minio_client=minio_client,
         file=file,
         filename=file.filename
     )
 
+    workflow_id = uuid4()
     await client.start_workflow(
         "TestWorkflow",
-        args=[],
-        id=f"task_{file_name}",
+        args=[file_name],
+        id=f"audio_{workflow_id}",
         task_queue="first-queue"
     )
 
-    return {"file": file_name}
+    return {"file_name": file_name, "workflow_id": workflow_id}
+
+
+@app.websocket("/ws/{file_id}")
+async def websocket_endpoint(websocket: WebSocket, file_id: str):
+    await websocket.accept()
+    # чтение обновлений от воркфлоу temporal
+    async for data in subscribe(file_id):
+        # передаем в веб сокет статус
+        # (или любой другой объект в текстовом формате)
+        await websocket.send_text(str(data))
