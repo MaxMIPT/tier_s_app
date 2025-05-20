@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from config import settings
+from db_models.workflow import WorkflowTask
+
 
 engine = create_async_engine(settings.DATABASE_URL, echo=True)
 async_session_maker = async_sessionmaker(
@@ -16,3 +18,15 @@ async_session_maker = async_sessionmaker(
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
+
+
+class DatabaseService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def save_workflow_task(self, file_name: str, workflow_id: str):
+        task = WorkflowTask(file_name=file_name, workflow_id=workflow_id)
+        self.db.add(task)
+        await self.db.commit()
+        await self.db.refresh(task)
+        return task
