@@ -5,7 +5,8 @@ from fastapi import Depends, FastAPI, UploadFile, File, WebSocket
 from temporalio.client import Client
 
 from config import settings
-from db import init_db, get_db
+from clients.db_client import get_db, DatabaseService
+from db import init_db
 from minio import create_bucket
 from redis_client import subscribe
 
@@ -14,7 +15,7 @@ from clients.minio_client import minio_client
 from services.minio_service import minio_service
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from services.workflow_service import save_workflow_task_to_db
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -40,7 +41,7 @@ async def upload_and_process_audio(
     file: UploadFile = File(...),
     client: Client = Depends(get_temporal_client),
     minio_client=Depends(minio_client.get_client),
-    db: AsyncSession = Depends(get_db) 
+    db: AsyncSession = Depends(get_db)
 ):
     file_name = await minio_service.add_new_file(
         minio_client=minio_client,
@@ -55,8 +56,11 @@ async def upload_and_process_audio(
         id=f"audio_{workflow_id}",
         task_queue="first-queue"
     )
-    
-    await save_workflow_task_to_db(db=db, file_name=file_name, workflow_id=str(workflow_id))
+
+    await DatabaseService(db).save_workflow_task(
+        file_name=file_name,
+        workflow_id=str(workflow_id)
+    )
 
     return {"file_name": file_name, "workflow_id": workflow_id}
 
