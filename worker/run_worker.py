@@ -3,7 +3,7 @@ import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from bar_workflow import TestWorkflow
+from worker.workflow_def import TestWorkflow
 from foo_activity import worker_task
 
 

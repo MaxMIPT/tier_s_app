@@ -9,11 +9,9 @@ class MinioConfig(BaseModel):
     bucket_name: str
     endpoint_url: str
 
-
 class RedisConfig(BaseModel):
     host: str
     port: int
-
 
 class Settings(BaseModel):
     minio: MinioConfig
