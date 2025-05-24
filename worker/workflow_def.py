@@ -24,7 +24,7 @@ class Workflow:
             file_url = voice_path,
             retry_policy=retry_policy,
         )
-        # если ошибка -> отменяем флоу
+        # если ошибка -> отменяем флоу (запускаем активити которое пишет в редис что пайплайн (воркфлоу) сломался)
 
         # распознавание текста из аудио
         from_2_path = await workflow.execute_activity_method(
@@ -32,7 +32,7 @@ class Workflow:
             from_1_path = from_1_path,
             retry_policy=retry_policy,
         )
-        # если ошибка -> отменяем флоу
+        # если ошибка -> отменяем флоу -> отменяем флоу (запускаем активити которое пишет в редис что пайплайн (воркфлоу) сломался)
 
         # озвучка текста
         from_3_path = await workflow.execute_activity_method(
@@ -40,7 +40,7 @@ class Workflow:
             from_2_path = from_2_path,
             retry_policy=retry_policy,
         )
-        # если ошибка -> отменяем флоу
+        # если ошибка -> отменяем флоу -> отменяем флоу (запускаем активити которое пишет в редис что пайплайн (воркфлоу) сломался)
 
         # если все норм, запускаем ласт флоу, которое запишет в редис task_type=ready и data={text:"", file:"url"}
         from_4_path = await workflow.execute_activity_method(
@@ -48,6 +48,6 @@ class Workflow:
             from_3_path = from_3_path,
             retry_policy=retry_policy,
         )
-        # если ошибка -> отменяем флоу
+        # если ошибка -> отменяем флоу -> отменяем флоу (запускаем активити которое пишет в редис что пайплайн (воркфлоу) сломался)
 
         return from_4_path
