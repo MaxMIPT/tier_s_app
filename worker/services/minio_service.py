@@ -46,4 +46,16 @@ class MinioService:
     
     
 
+
+
 minio_service = MinioService()
+
+
+
+
+
+
+
+
+
+
