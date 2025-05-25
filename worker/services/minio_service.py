@@ -34,20 +34,6 @@ class MinioService:
             filename=filename
         )
 
-    async def delete_file(
-        self, minio_client: ClientCreatorContext,
-        filename: str
-        ) -> None:
-
-        return await minio_repo.delete_file(
-            minio_client=minio_client,
-            filename=filename
-        )
-    
-    
-
-
-
 minio_service = MinioService()
 
 

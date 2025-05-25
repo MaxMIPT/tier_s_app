@@ -60,9 +60,17 @@ class WorkflowResultRepository:
         )
         return result.scalar_one_or_none()
     
+    async def get_workflow_by_client_id(
+            db: AsyncSession,
+            client_id: str
+    ):
+        stmt = select(WorkflowResult).where(WorkflowResult.client_id == client_id)
+        res = await db.execute(stmt)
+        return res.scalar_one_or_none()
+    
 class WorkflowRepository:
-    async def create(self, db: AsyncSession, client_id: str, workflow_name: str, task_queue: str) -> None:
-        obj = WorkflowResult(client_id=client_id, workflow_name=workflow_name, task_queue=task_queue)
+    async def create(self, db: AsyncSession, workflow_name: str, task_queue: str) -> None:
+        obj = WorkflowResult(workflow_name=workflow_name, task_queue=task_queue)
         db.add(obj)
         await db.commit()
         await db.refresh(obj)

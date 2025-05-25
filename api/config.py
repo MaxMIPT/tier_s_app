@@ -1,5 +1,6 @@
 import os
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
 
 class DBConfig(BaseModel):
@@ -45,7 +46,7 @@ settings = Settings(
     ),
     redis=RedisConfig(
         host=os.environ.get("REDIS_HOST"),
-        port=int(os.environ.get("REDIS_PORT"))
+        port=int(os.environ.get("REDIS_PORT")),
     ),
     DATABASE_URL=os.environ.get("DATABASE_URL")
 )
