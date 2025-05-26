@@ -3,57 +3,42 @@ from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 from activities.convertion_act import task_1_run_convertation
-from activities.database_act import add_new_line_to_db
+import httpx
+from enum import Enum
+from pydantic import BaseModel
+
+class StatusEnum(str, Enum):
+    success = "success"
+    failed = "failed"
+    running = "running"
+    
+class WorkflowResultModel(BaseModel):
+    client_id: str
+    original_file: str | None
+    converted_file: str | None
+    restored_text: str | None
+    voiced_text: str | None
+    status: StatusEnum
+
 @workflow.defn
 class Workflow:
 
     @workflow.run
     async def run(self, file_url : str, client_id : str) -> str:
 
-        # конвертация аудио
         try:
+
             file_url = await workflow.execute_activity_method(
-                task_1_run_convertation,
+                task_1_run_convertation, file_url
             )
-            status = True
-            # записать в базу результат
-        except ActivityError as e:
-            # записать в базу результат
-            status = False
+
+            data = WorkflowResultModel(client_id=client_id, status=StatusEnum.running, converted_file=file_url)
+            async with httpx.AsyncClient() as client:
+                await client.post("https://app/workflow-results", data=data)
+
+        except Exception as e:
+
+            data = WorkflowResultModel(client_id=client_id, status=StatusEnum.failed)
+            async with httpx.AsyncClient() as client:
+                await client.post("https://app/workflow-results", data=data)
             raise e
-
-        try:
-            await workflow.execute_acitivity_method(
-                add_new_line_to_db
-            )
-
-
-
-
-        """
-        # распознавание текста из аудио
-        from_2_path = await workflow.execute_activity_method(
-            task_2_convert_to_text,
-            from_1_path = from_1_path,
-            retry_policy=retry_policy,
-        )
-        # если ошибка -> отменяем флоу (запускаем активити которое пишет в редис что пайплайн (воркфлоу) сломался)
-
-        # озвучка текста
-        from_3_path = await workflow.execute_activity_method(
-            task_3_make_text_better,
-            from_2_path = from_2_path,
-            retry_policy=retry_policy,
-        )
-        # если ошибка ->  отменяем флоу (запускаем активити которое пишет в редис что пайплайн (воркфлоу) сломался)
-
-        # если все норм, запускаем ласт флоу, которое запишет в редис task_type=ready и data={text:"", file:"url"}
-        from_4_path = await workflow.execute_activity_method(
-            task_4_convert_to_voice,
-            from_3_path = from_3_path,
-            retry_policy=retry_policy,
-        )
-        # если ошибка ->  отменяем флоу (запускаем активити которое пишет в редис что пайплайн (воркфлоу) сломался)
-        """
-
-        return from_4_path

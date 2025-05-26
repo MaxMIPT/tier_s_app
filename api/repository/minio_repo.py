@@ -33,21 +33,6 @@ class MinioRepository:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    async def delete_file(
-        self, minio_client: ClientCreatorContext,
-        object_name: str
-    ) -> None:
-        try:
-            async with minio_client as client:
-                await client.delete_object(
-                    Bucket=self.bucket_name,
-                    Key=object_name
-                )
-        except ClientError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
     async def get_file(
         self,
         minio_client: ClientCreatorContext,
