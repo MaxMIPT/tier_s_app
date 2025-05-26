@@ -44,7 +44,7 @@ class MinioService:
 
         return await minio_repo.get_file(
             minio_client=minio_client,
-            filename=filename
+            object_name=filename
         )
     
 

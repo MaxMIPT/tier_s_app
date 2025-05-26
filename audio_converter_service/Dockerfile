@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-WORKDIR /worker
+WORKDIR /audio_converter_service
 
 COPY pyproject.toml .
 

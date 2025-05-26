@@ -2,7 +2,7 @@ from tempfile import TemporaryDirectory
 from uuid import uuid4
 
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI, UploadFile, File, WebSocket, HTTPException, WebSocketDisconnect, status
+from fastapi import Depends, FastAPI, UploadFile, File, WebSocket, HTTPException, WebSocketDisconnect, Response, status
 from fastapi.responses import FileResponse
 from temporalio.client import Client
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +47,7 @@ async def upload_and_process_audio(
     minio_client=Depends(minio_client.get_client),
     db: AsyncSession = Depends(get_db),
 ):
-    file_url = await minio_service.add_new_file(
+    file_url = await minio_service.add_any_file(
         minio_client=minio_client,
         file=file,
         filename=file.filename
@@ -58,7 +58,7 @@ async def upload_and_process_audio(
     await client.start_workflow(
         "Workflow",
         args=[file_url, client_id],
-        id=workflow_id,
+        id=f"{workflow_id}",
         task_queue="RUN_WORKFLOW_TASK_QUEUE_NAME"
     )
 
@@ -79,14 +79,21 @@ async def create_workflow_results(
     if not obj:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create workflow result")
 
-@app.get("/upload_file/{path}")
-async def download_files(path:str, 
+@app.get("/files/{path}")
+async def download_file(path:str,
                          minio_client=Depends(minio_client.get_client)):
     file = await minio_service.get_file(minio_client, path)
-    return file
+    return Response(
+        content=file,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": f'attachment; filename="{path}"'
+        }
+    )
+    # return file
 
-@app.get("/download_file/")
-async def download_files(file: UploadFile = File(...),
+@app.post("/files")
+async def upload_file(file: UploadFile = File(...),
                           minio_client=Depends(minio_client.get_client)):
     file_url = await minio_service.add_any_file(
         minio_client=minio_client,

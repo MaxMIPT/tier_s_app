@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_app:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d dbname"]
       interval: 5s
@@ -37,6 +37,11 @@ services:
         condition: service_healthy
     volumes:
       - ./worker/dynamicconfig:/etc/temporal/config/dynamicconfig
+    healthcheck:
+      test: [ "CMD", "tctl", "--namespace", "default", "workflow", "list" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: quay.io/minio/minio
@@ -75,10 +80,12 @@ services:
       - 8080:8080
 
   convertion:
+    container_name: convertion
     build:
       context: ./audio_converter_service
 
   api:
+    container_name: api
     build:
       context: ./api
     ports:
@@ -126,5 +133,5 @@ services:
         condition: service_started
 
 volumes:
-  postgres_data:
+  postgres_data_app:
   minio_data:

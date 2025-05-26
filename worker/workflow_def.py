@@ -27,15 +27,15 @@ class Workflow:
     @workflow.run
     async def run(self, file_url : str, client_id : str) -> str:
         try:
-            file_url = await workflow.execute_activity_method(
-                task_1_run_convertation, file_url, task_queue = RUN_WORKFLOW_TASK_QUEUE_NAME
+            file_url = await workflow.execute_activity(
+                task_1_run_convertation, args=[file_url], task_queue = RUN_WORKFLOW_TASK_QUEUE_NAME, start_to_close_timeout=timedelta(seconds=60)
             )
 
             data = WorkflowResultModel(client_id=client_id, status=StatusEnum.running, converted_file=file_url)
-            await workflow.execute_activity_method(insert_to_database, data.model_dump(), task_queue = RUN_WORKFLOW_TASK_QUEUE_NAME)
+            await workflow.execute_activity(insert_to_database, args=[data.model_dump()], task_queue = RUN_WORKFLOW_TASK_QUEUE_NAME, start_to_close_timeout=timedelta(seconds=60))
             return
 
         except Exception as e:
             data = WorkflowResultModel(client_id=client_id, status=StatusEnum.failed)
-            await workflow.execute_activity_method(insert_to_database, data.model_dump(), task_queue = RUN_WORKFLOW_TASK_QUEUE_NAME)
+            await workflow.execute_activity(insert_to_database, args=[data.model_dump()], task_queue = RUN_WORKFLOW_TASK_QUEUE_NAME, start_to_close_timeout=timedelta(seconds=60))
             raise e
