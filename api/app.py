@@ -10,8 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config import settings
 from clients.db_client import get_db
 from clients.minio_client import minio_client
-from repository.db_repo import WorkflowRepository, WorkflowResultRepository
+from repository.db_repo import workFlowRepo, workFlowResultRepo
+
 from db import init_db
+from db_models.workflow_result import WorkflowResult # не удалять!
+from db_models.workflow import WorkflowTask # не удалять!
+
 from minio import create_bucket
 from clients.temporal_client import get_temporal_client
 from clients.minio_client import minio_client
@@ -28,7 +32,7 @@ async def lifespan(app: FastAPI):
     app.state.temporal_client = await Client.connect("temporal:7233")
     await init_db()
     await create_bucket(bucket_name=settings.minio.bucket_name)
-    asyncio.create_task(get_new_data(connections, clients, get_db()))
+    #asyncio.create_task(get_new_data(connections, clients, get_db()))
     yield
 
 #----------------------------------------------------------------------------------------
@@ -59,8 +63,8 @@ async def upload_and_process_audio(
     )
 
     payload = schemas.WorkflowModel(workflow_id = workflow_id, client_id = client_id)
-    repo = WorkflowRepository()
-    obj = await repo.create(db = db, **payload.model_dump())
+    
+    obj = await workFlowRepo.create(db = db, **payload.model_dump())
     await db.commit()
     await db.refresh(obj)
     return obj
@@ -70,8 +74,7 @@ async def create_workflow_results(
     payload: schemas.WorkflowResultModel,
     db: AsyncSession = Depends(get_db),
 ):
-    repo = WorkflowResultRepository()
-    obj = await repo.create(db = db, 
+    obj = await workFlowResultRepo.create(db = db, 
                             **payload.model_dump())
     if not obj:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create workflow result")

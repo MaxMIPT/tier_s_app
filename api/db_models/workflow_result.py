@@ -1,9 +1,6 @@
 from sqlalchemy import Column, Enum, String, Integer
 from sqlalchemy.orm import declarative_base
-
-
-Base = declarative_base()
-
+from db import Base
 
 class WorkflowResult(Base):
     __tablename__ = "workflow_result"
@@ -14,4 +11,4 @@ class WorkflowResult(Base):
     converted_file = Column(String, nullable=True)
     restored_text = Column(String, nullable=True)
     voiced_text = Column(String, nullable=True)
-    status = Column(Enum("success", "failed", "running"), nullable=True)
+    status = Column(Enum("success", "failed", "running", name="workflow_status_enum"), nullable=True)

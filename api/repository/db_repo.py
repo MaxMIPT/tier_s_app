@@ -36,8 +36,13 @@ class WorkflowResultRepository:
         orm_result = result.scalars().all()
         return [schemas.WorkflowResultModel.model_validate(obj) for obj in orm_result]
 
+
 class WorkflowRepository:
     async def create(self, db: AsyncSession, client_id: str, workflow_id: str) -> None:
         obj = WorkflowTask(client_id=client_id, workflow_id=workflow_id)
         db.add(obj)
         await db.commit()
+
+
+workFlowResultRepo = WorkflowResultRepository()
+workFlowRepo = WorkflowRepository()
