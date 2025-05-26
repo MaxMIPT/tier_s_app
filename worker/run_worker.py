@@ -4,10 +4,8 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 import activities
 
-import activities.Convert
-import activities.Convert.convert
-import activities.Convert.step1
-from worker.workflow_def import TestWorkflow
+import activities.convertion_act
+from workflow_def import Workflow
 
 RUN_WORKFLOW_TASK_QUEUE_NAME = "WORKFLOW_TASK_QUEUE"
 
@@ -16,11 +14,8 @@ async def main():
     worker = Worker(
         client,
         task_queue="WORKFLOW_TASK_QUEUE-queue",
-        workflows=[TestWorkflow],
-        activities=[activities.Convert.step1.task_1_run_convertation,
-                    activities.Model1.step2.task_2_convert_to_text,
-                    activities.Model2.step3.task_3_make_text_better,
-                    activities.Model3.step4.task_4_convert_to_voice]
+        workflows=[Workflow],
+        activities=[activities.convertion_act]
     )
     await worker.run()
 

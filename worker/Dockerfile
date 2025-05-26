@@ -11,4 +11,4 @@ RUN poetry install --no-root
 
 COPY . .
 
-CMD ["python", "main.py"]
+CMD ["poetry", "run", "python", "run_worker.py"]

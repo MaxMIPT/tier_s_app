@@ -6,7 +6,7 @@ async def get_new_data(connections, clients, db_client):
 
     while True:
         await asyncio.sleep(5) 
-        data_list = await WorkflowResultRepository.get(db_client, current_id)
+        data_list = await WorkflowResultRepository.get(start_id = current_id, db = db_client)
         current_id += len(data)
         for data in data_list:
             client_id = data.client_id

@@ -20,6 +20,8 @@ from services.websocket_data import get_new_data
 import schemas
 import asyncio
 
+RUN_WORKFLOW_TASK_QUEUE_NAME = "WORKFLOW_TASK_QUEUE"
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
@@ -39,7 +41,7 @@ async def upload_and_process_audio(
     file: UploadFile = File(...),
     client: Client = Depends(get_temporal_client),
     minio_client=Depends(minio_client.get_client),
-    db: AsyncSession = Depends(get_db()),
+    db: AsyncSession = Depends(get_db),
 ):
     file_url = await minio_service.add_new_file(
         minio_client=minio_client,
@@ -53,7 +55,7 @@ async def upload_and_process_audio(
         "TestWorkflow",
         args=[file_url, client_id],
         id=workflow_id,
-        task_queue="first-queue"
+        task_queue="RUN_WORKFLOW_TASK_QUEUE_NAME"
     )
 
     payload = schemas.WorkflowModel(workflow_id = workflow_id, client_id = client_id)
@@ -66,20 +68,23 @@ async def upload_and_process_audio(
 @app.post("/workflow-results")
 async def create_workflow_results(
     payload: schemas.WorkflowResultModel,
-    db: AsyncSession = Depends(get_db()),
+    db: AsyncSession = Depends(get_db),
 ):
     repo = WorkflowResultRepository()
-    obj = await repo.create(db = db, **payload.model_dump())
+    obj = await repo.create(db = db, 
+                            **payload.model_dump())
     if not obj:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create workflow result")
 
 @app.get("/upload_file/{path}")
-async def download_files(path:str, minio_client=Depends(minio_client.get_client)):
+async def download_files(path:str, 
+                         minio_client=Depends(minio_client.get_client)):
     file = await minio_service.get_file(minio_client, path)
     return file
 
 @app.get("/download_file/")
-async def download_files(file: UploadFile = File(...), minio_client=Depends(minio_client.get_client)):
+async def download_files(file: UploadFile = File(...),
+                          minio_client=Depends(minio_client.get_client)):
     file_url = await minio_service.add_any_file(
         minio_client=minio_client,
         file=file,
@@ -107,4 +112,4 @@ async def websocket_endpoint(ws: WebSocket):
 
     finally:
         del connections[connection_id]
-        del clients[client_id].remove(connection_id)
+        clients[client_id].remove(connection_id)
