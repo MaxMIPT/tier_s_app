@@ -11,4 +11,4 @@ RUN poetry install --no-root
 
 COPY . .
 
-CMD ["poetry", "run", "python", "run_worker.py"]
+CMD ["poetry", "run", "workflow_def.py"]

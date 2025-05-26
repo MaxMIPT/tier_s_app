@@ -29,7 +29,7 @@ RUN_WORKFLOW_TASK_QUEUE_NAME = "WORKFLOW_TASK_QUEUE"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    app.state.temporal_client = await Client.connect("temporal:7233")
+    app.state.temporal_client = await Client.connect("temporal:7233", namespace="default")
     await init_db()
     await create_bucket(bucket_name=settings.minio.bucket_name)
     #asyncio.create_task(get_new_data(connections, clients, get_db()))
@@ -56,7 +56,7 @@ async def upload_and_process_audio(
     workflow_id = uuid4()
     
     await client.start_workflow(
-        "TestWorkflow",
+        "Workflow",
         args=[file_url, client_id],
         id=workflow_id,
         task_queue="RUN_WORKFLOW_TASK_QUEUE_NAME"

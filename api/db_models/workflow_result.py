@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Enum, String, Integer
-from sqlalchemy.orm import declarative_base
 from db import Base
 
 class WorkflowResult(Base):

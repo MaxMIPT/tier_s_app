@@ -3,7 +3,7 @@ from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 from activities.convertion_act import task_1_run_convertation
-import httpx
+from activities.db_act import insert_to_database
 from enum import Enum
 from pydantic import BaseModel
 from shared import RUN_WORKFLOW_TASK_QUEUE_NAME
@@ -21,7 +21,7 @@ class WorkflowResultModel(BaseModel):
     voiced_text: str | None
     status: StatusEnum
 
-@workflow.defn
+@workflow.defn(name="Workflow")
 class Workflow:
 
     @workflow.run
@@ -32,12 +32,10 @@ class Workflow:
             )
 
             data = WorkflowResultModel(client_id=client_id, status=StatusEnum.running, converted_file=file_url)
-            async with httpx.AsyncClient() as client:
-                await client.post("http://app:8000/workflow-results", json=data.model_dump())
+            await workflow.execute_activity_method(insert_to_database, data.model_dump(), task_queue = RUN_WORKFLOW_TASK_QUEUE_NAME)
             return
 
         except Exception as e:
             data = WorkflowResultModel(client_id=client_id, status=StatusEnum.failed)
-            async with httpx.AsyncClient() as client:
-                await client.post("http://app:8000/workflow-results", json=data.model_dump())
+            await workflow.execute_activity_method(insert_to_database, data.model_dump(), task_queue = RUN_WORKFLOW_TASK_QUEUE_NAME)
             raise e
