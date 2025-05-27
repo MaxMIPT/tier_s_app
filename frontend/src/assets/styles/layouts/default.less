@@ -1,0 +1,109 @@
+@import '@styles/includes';
+
+.default_header {
+    width: 100%;
+
+    #top_header_spacer {
+        height: 70px;
+
+        .width-size-sm-less({
+            height: 50px;
+        });
+    }
+
+    #top_header_wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 500;
+        max-width: calc(100vw - var(--modal-content-margin-right));
+    }
+
+    #top_header {
+        color: var(--font-color-2);
+        background-color: var(--bg-color-1);
+        box-sizing: content-box;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+
+        > div {
+            .std-wrapper();
+            height: 70px;
+            display: flex;
+            align-items: center;
+            position: relative;
+
+            .width-size-sm-less({
+                height: 50px;
+            });
+
+            > .logo {
+                flex-shrink: 0;
+
+                > a {
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+
+                    > .icon {
+                        flex-shrink: 0;
+                        width: 40px;
+                        height: 36px;
+                        background: url('@/assets/icons/logo.svg') no-repeat left top;
+                        background-size: auto 100%;
+                    }
+
+                    > .text {
+                        font-family: 'Strong';
+                        line-height: 1;
+                        font-size: 24px;
+
+                        color: var(--font-color-3);
+                    }
+
+                    .width-size-sm-less({
+                        gap:10px;
+
+                        > .icon {
+                            width: 31px;
+                            height: 30px;
+                        }
+
+                        > .text {
+                            font-size:18px;
+                        }
+                    });
+                }
+            }
+
+            > .buttons {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                margin-left: auto;
+
+                .width-size-less(1000px, {
+                    > .sm-hidden {
+                        display: none;
+                    }
+                });
+
+                .width-size-less(350px, {
+                    gap: 10px;
+                });
+
+                > .theme {
+                    //
+                }
+            }
+        }
+    }
+}
+
+main.default {
+    padding: 70px 0 80px 0;
+
+    .width-size-sm-less({
+        padding:20px 0 40px 0;
+    });
+}

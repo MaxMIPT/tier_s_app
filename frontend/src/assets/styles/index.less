@@ -1,0 +1,60 @@
+@import '../fonts/Strong/stylesheet.css';
+
+@import 'reset.less';
+@import '@styles/includes';
+@import './themes';
+
+html {
+    scrollbar-gutter: stable;
+    overflow-y: scroll;
+    text-rendering: geometricPrecision;
+
+    &.no_scrolling_element {
+        overflow-y: visible;
+    }
+}
+
+.scrolling_element {
+    overflow-y: scroll;
+
+    &.lock_scroll {
+        overflow: hidden !important;
+        position: relative;
+    }
+}
+
+body {
+    font-family: 'Inter', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    background-color: var(--body-bg-color);
+    color: var(--font-color-1);
+    font-size: 16px;
+
+    &.no_transition * {
+        transition: none !important;
+    }
+}
+
+.page-enter-active,
+.page-leave-active {
+    transition: all 0.25s ease;
+}
+.page-enter-from,
+.page-leave-to {
+    opacity: 0;
+    filter: blur(1rem);
+}
+
+.md-std-wrapper {
+    .width-size-sm-less({
+        padding:0 @std-x-padding-sm;
+    });
+}
+
+@import './page_loading_indicator.less';
+@import './skeleton.less';
+@import './layouts/common.less';
+@import './grid.less';
+//@import './ui.less';
+@import './modal.less';
+@import './buttons.less';
+@import './nuxt-ui.less';

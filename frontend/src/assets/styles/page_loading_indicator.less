@@ -1,0 +1,60 @@
+#page_loading {
+    position: fixed;
+    z-index: 1100;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    height: 0;
+    transition: opacity 0.25s ease;
+
+    &.show {
+        height: 8px;
+        opacity: 1;
+
+        .loader-line:before {
+            animation: lineLoaderAnim 5s ease infinite;
+        }
+    }
+
+    .loader-line {
+        width: 100%;
+        height: 8px;
+        position: relative;
+        overflow: hidden;
+        background-color: #ddd;
+    }
+
+    .loader-line:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        height: 8px;
+        width: 0;
+        background-color: var(--color-1);
+    }
+
+    .width-size-sm-less({
+        bottom: auto;
+        top:0;
+
+        &.show, .loader-line, .loader-line:before {
+            height: 5px;
+        }
+    });
+}
+
+@keyframes lineLoaderAnim {
+    0% {
+        width: 0;
+        left: 0;
+    }
+    50% {
+        width: 100%;
+        left: 0;
+    }
+    100% {
+        left: 100%;
+        width: 100%;
+    }
+}
