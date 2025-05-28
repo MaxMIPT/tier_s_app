@@ -50,7 +50,7 @@ class Workflow:
                 task_queue=RUN_WORKFLOW_TASK_QUEUE_NAME,
                 start_to_close_timeout=timedelta(seconds=60),
             )
-            return
+            return 'макака'
 
         except Exception as e:
             data = WorkflowResultModel(client_id=client_id, status=StatusEnum.failed)
