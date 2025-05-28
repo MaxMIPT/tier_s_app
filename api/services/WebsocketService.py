@@ -1,5 +1,5 @@
 import asyncio
-from repository.db_repo import workFlowResultRepo, workFlowRepo
+from api.repository.TaskRepo import workFlowResultRepo
 
 async def get_new_data(connections, clients, db_client_generator):
     current_id = 1
@@ -17,5 +17,5 @@ async def get_new_data(connections, clients, db_client_generator):
                     websocket.send_text(status)
                     if status == 'success':
                         for connection in clients[client_id]:
-                            del connections[connection_id]
+                            del connections[connection]
                         del clients[client_id]

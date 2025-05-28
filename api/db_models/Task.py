@@ -4,8 +4,12 @@ from sqlalchemy import Column, String, DateTime
 
 from db import Base
 
+<<<<<<< Updated upstream:api/db_models/workflow.py
 
 class WorkflowTask(Base):
+=======
+class Task(Base):
+>>>>>>> Stashed changes:api/db_models/Task.py
     __tablename__ = "workflow_tasks"
 
     client_id = Column(String, primary_key=True)

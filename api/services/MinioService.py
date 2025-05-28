@@ -2,7 +2,7 @@ from aiobotocore.session import ClientCreatorContext
 from fastapi import HTTPException, status
 from typing import Any
 
-from repository.minio_repo import minio_repo
+from repository.MinioRepo import minio_repo
 
 
 class MinioService:

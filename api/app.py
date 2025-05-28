@@ -23,8 +23,13 @@ from clients.minio_client import minio_client
 from repository.db_repo import workFlowRepo, workFlowResultRepo
 
 from db import init_db
+<<<<<<< Updated upstream
 from db_models.workflow_result import WorkflowResult  # не удалять!
 from db_models.workflow import WorkflowTask  # не удалять!
+=======
+from db_models.ResultRepo import WorkflowResult # не удалять!
+from db_models.workflow import WorkflowTask # не удалять!
+>>>>>>> Stashed changes
 
 from minio import create_bucket
 from clients.temporal_client import get_temporal_client
@@ -101,20 +106,30 @@ async def create_workflow_results(
 
 
 @app.get("/files/{path}")
+<<<<<<< Updated upstream
 async def download_file(path: str, minio_client=Depends(minio_client.get_client)):
+=======
+async def download_file(path:str,
+    minio_client=Depends(minio_client.get_client)):
+>>>>>>> Stashed changes
     file = await minio_service.get_file(minio_client, path)
     return Response(
         content=file,
         media_type="application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{path}"'},
     )
-    # return file
 
+<<<<<<< Updated upstream
 
 @app.post("/files")
 async def upload_file(
     file: UploadFile = File(...), minio_client=Depends(minio_client.get_client)
 ):
+=======
+@app.post("/files") 
+async def upload_file(file: UploadFile = File(...),
+    minio_client=Depends(minio_client.get_client)):
+>>>>>>> Stashed changes
     file_url = await minio_service.add_any_file(
         minio_client=minio_client, file=file, filename=file.filename
     )
@@ -139,7 +154,7 @@ async def websocket_endpoint(ws: WebSocket):
         connections[connection_id] = ws
         client_id = init_msg.get("client_id")
         clients.setdefault(client_id, []).append(connection_id)
-
+        
     finally:
         del connections[connection_id]
         clients[client_id].remove(connection_id)
