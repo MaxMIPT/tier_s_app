@@ -3,6 +3,7 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 import activities
 from workflow_def import Workflow
+
 from shared import RUN_WORKFLOW_TASK_QUEUE_NAME
 
 import logging

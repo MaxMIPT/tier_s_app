@@ -81,7 +81,6 @@ __pypackages__/
 *.sage.py
 
 # Environments
-# .env пусть будет пока)))
 .venv
 env/
 venv/

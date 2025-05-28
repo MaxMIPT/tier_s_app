@@ -22,7 +22,7 @@ from services.WebsocketService import get_new_data
 from services.DbService import dbService
 import schemas
 
-RUN_WORKFLOW_TASK_QUEUE_NAME = "WORKFLOW_TASK_QUEUE"
+RUN_WORKFLOW_TASK_QUEUE_NAME = "RUN_WORKFLOW_TASK"
 
 
 @asynccontextmanager
@@ -61,7 +61,7 @@ async def upload_and_process_audio(
         "Workflow",
         args=[file_url, client_id],
         id=f"{workflow_id}",
-        task_queue="RUN_WORKFLOW_TASK_QUEUE_NAME"
+        task_queue=RUN_WORKFLOW_TASK_QUEUE_NAME
     )
 
     await dbService.taskInsert(db, client_id = client_id, 
