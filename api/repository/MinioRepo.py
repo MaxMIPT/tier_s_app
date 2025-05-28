@@ -10,8 +10,12 @@ from config import settings
 
 class MinioRepository:
 
+# -----------------------------------------------------------------------------------
+
     def __init__(self):
         self.bucket_name = settings.minio.bucket_name
+
+# -----------------------------------------------------------------------------------
 
     async def upload_file(
         self, minio_client: ClientCreatorContext,
@@ -52,6 +56,6 @@ class MinioRepository:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
+# -----------------------------------------------------------------------------------
 
 minio_repo = MinioRepository()

@@ -16,8 +16,11 @@ services:
       timeout: 5s
       retries: 5
 
+
+
   temporal:
     image: temporalio/auto-setup:1.27.2
+    #platform: linux/amd64
     container_name: temporal
     ports:
       - "7233:7233"

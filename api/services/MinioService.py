@@ -7,6 +7,9 @@ from repository.MinioRepo import minio_repo
 
 
 class MinioService:
+
+# -----------------------------------------------------------------------------------
+
     async def add_voice_file(
         self, minio_client: ClientCreatorContext,
         file: Any,
@@ -25,6 +28,8 @@ class MinioService:
             filename=filename
         )
 
+# -----------------------------------------------------------------------------------
+
     async def add_any_file(
         self, minio_client: ClientCreatorContext,
         file: Any,
@@ -37,7 +42,9 @@ class MinioService:
             file=file_bytes,
             filename=filename
         )
-    
+
+# -----------------------------------------------------------------------------------
+
     async def get_file(
         self, minio_client: ClientCreatorContext,
         filename: str
@@ -48,5 +55,5 @@ class MinioService:
             object_name=filename
         )
     
-
+# -----------------------------------------------------------------------------------
 minio_service = MinioService()

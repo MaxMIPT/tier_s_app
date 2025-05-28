@@ -6,6 +6,8 @@ from schemas import TaskModel
 
 class TaskRepository:
 
+# -----------------------------------------------------------------------------------
+
     async def insert(self,
                     db: AsyncSession, 
                     taskSchema: TaskModel
@@ -23,5 +25,7 @@ class TaskRepository:
         )
         orm_result = result.scalars().all()
         return [TaskModel.model_validate(obj) for obj in orm_result]
+
+# -----------------------------------------------------------------------------------
 
 TaskRepo = TaskRepository()

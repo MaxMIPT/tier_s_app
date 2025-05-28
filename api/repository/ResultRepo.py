@@ -4,6 +4,9 @@ from db_models.Result import Result
 from schemas import ResultModel, UpdateResultMode
 
 class ResultRepository:
+
+# -----------------------------------------------------------------------------------
+
     async def insert(
             self,
             db: AsyncSession,
@@ -38,5 +41,7 @@ class ResultRepository:
         )
 
         await db.commit()
+
+# -----------------------------------------------------------------------------------
 
 ResultRepo = ResultRepository()
