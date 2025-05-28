@@ -43,8 +43,7 @@ class Workflow:
                 client_id=client_id, status=StatusEnum.running, converted_file=file_url
             )
 
-            # после выполнения (успешное, неуспешное)
-            # пишем в БД
+            # после выполнения (успешное)
             await workflow.execute_activity(
                 insert_to_database,
                 args=[data.model_dump()],
@@ -52,8 +51,6 @@ class Workflow:
                 start_to_close_timeout=timedelta(seconds=60),
             )
             return
-
-            # повторяем для всех остальных тасок
 
         except Exception as e:
             data = WorkflowResultModel(client_id=client_id, status=StatusEnum.failed)
@@ -64,3 +61,5 @@ class Workflow:
                 start_to_close_timeout=timedelta(seconds=60),
             )
             raise e
+        
+            # повторяем для всех остальных тасок

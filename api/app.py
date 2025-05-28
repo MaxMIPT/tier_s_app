@@ -1,43 +1,26 @@
+from contextlib import asynccontextmanager
 from tempfile import TemporaryDirectory
 from uuid import uuid4
 
-from contextlib import asynccontextmanager
-from fastapi import (
-    Depends,
-    FastAPI,
-    UploadFile,
-    File,
-    WebSocket,
-    HTTPException,
-    WebSocketDisconnect,
-    Response,
-    status,
-)
+from fastapi import (Depends, FastAPI, File, HTTPException, Response,
+                     UploadFile, WebSocket, WebSocketDisconnect, status)
 from fastapi.responses import FileResponse
-from temporalio.client import Client
 from sqlalchemy.ext.asyncio import AsyncSession
+from temporalio.client import Client
 
-from config import settings
+import schemas
 from clients.db_client import get_db
 from clients.minio_client import minio_client
-from repository.db_repo import workFlowRepo, workFlowResultRepo
-
-from db import init_db
-<<<<<<< Updated upstream
-from db_models.workflow_result import WorkflowResult  # не удалять!
-from db_models.workflow import WorkflowTask  # не удалять!
-=======
-from db_models.ResultRepo import WorkflowResult # не удалять!
-from db_models.workflow import WorkflowTask # не удалять!
->>>>>>> Stashed changes
-
-from minio import create_bucket
 from clients.temporal_client import get_temporal_client
-from clients.minio_client import minio_client
-from services.minio_service import minio_service
-from services.websocket_data import get_new_data
+from config import settings
+from db import init_db
+from db_models.Result import Result  # не удалять!
+from db_models.Task import Task  # не удалять!
+from minio import create_bucket
+from services.MinioService import minio_service
+from services.WebsocketService import get_new_data
+from services.DbService import dbService
 import schemas
-import asyncio
 
 RUN_WORKFLOW_TASK_QUEUE_NAME = "WORKFLOW_TASK_QUEUE"
 
@@ -49,6 +32,7 @@ async def lifespan(app: FastAPI):
         "temporal:7233", namespace="default"
     )
     await init_db()
+    await get_new_data
     await create_bucket(bucket_name=settings.minio.bucket_name)
     yield
 
@@ -64,54 +48,48 @@ async def upload_and_process_audio(
     minio_client=Depends(minio_client.get_client),
     db: AsyncSession = Depends(get_db),
 ):
-    # 1. сложить файл в минио
 
     file_url = await minio_service.add_any_file(
         minio_client=minio_client, file=file, filename=file.filename
     )
-
+    
     workflow_id = uuid4()
 
-    # 2. запустить пайплайн, куда передаем путь до файла, полученный из п.1
-    # await client.start_workflow(
-    #     "Workflow",
-    #     args=[file_url, client_id],
-    #     id=f"{workflow_id}",
-    #     task_queue="RUN_WORKFLOW_TASK_QUEUE_NAME"
-    # )
-
-    # 3. записать в таблицы метаданные через сервис
-    # payload = schemas.WorkflowModel(workflow_id = workflow_id, client_id = client_id)
-
-    #
-    obj = await workFlowRepo.create_task(
-        db=db, client_id=client_id, workflow_id=workflow_id
+    await client.start_workflow(
+        "Workflow",
+        args=[file_url, client_id],
+        id=f"{workflow_id}",
+        task_queue="RUN_WORKFLOW_TASK_QUEUE_NAME"
     )
-    await db.commit()
-    # await db.refresh(obj)
-    return obj
+
+    await dbService.taskInsert(db, client_id = client_id, 
+                     workflow_id = workflow_id, status = schemas.TaskStatus.CREATED)
+    
+    await dbService.resultInsert(db, workflow_id = workflow_id,
+                    client_id=client_id,
+                    original_file=file_url,
+                    status=schemas.ResultStatus.running)
 
 
-@app.post("/workflow-results")
+@app.post("/workflow-update-result")
 async def create_workflow_results(
-    payload: schemas.WorkflowResultModel,
+    payload: schemas.ResultModel,
     db: AsyncSession = Depends(get_db),
 ):
-    obj = await workFlowResultRepo.create(db=db, **payload.model_dump())
-    if not obj:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create workflow result",
-        )
+    await dbService.resultUpdate(db, payload)
+
+
+@app.post("/workflow-insert-task")
+async def create_workflow_results(
+    payload: schemas.TaskModel,
+    db: AsyncSession = Depends(get_db),
+):
+    await dbService.taskInsert(db, payload)
 
 
 @app.get("/files/{path}")
-<<<<<<< Updated upstream
-async def download_file(path: str, minio_client=Depends(minio_client.get_client)):
-=======
 async def download_file(path:str,
     minio_client=Depends(minio_client.get_client)):
->>>>>>> Stashed changes
     file = await minio_service.get_file(minio_client, path)
     return Response(
         content=file,
@@ -119,17 +97,9 @@ async def download_file(path:str,
         headers={"Content-Disposition": f'attachment; filename="{path}"'},
     )
 
-<<<<<<< Updated upstream
-
-@app.post("/files")
-async def upload_file(
-    file: UploadFile = File(...), minio_client=Depends(minio_client.get_client)
-):
-=======
 @app.post("/files") 
 async def upload_file(file: UploadFile = File(...),
     minio_client=Depends(minio_client.get_client)):
->>>>>>> Stashed changes
     file_url = await minio_service.add_any_file(
         minio_client=minio_client, file=file, filename=file.filename
     )

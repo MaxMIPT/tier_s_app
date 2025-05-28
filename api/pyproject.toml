@@ -21,6 +21,7 @@ python-dotenv = "^1.1.0"
 mypy = "^1.15.0"
 black = "^25.1.0"
 loguru = "^0.7.3"
+isort = "^6.0.1"
 
 [tool.poetry.dev-dependencies]
 

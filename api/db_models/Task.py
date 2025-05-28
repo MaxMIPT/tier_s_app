@@ -1,19 +1,25 @@
 import datetime
 
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, DateTime, Integer, String, Enum
 
 from db import Base
 
-<<<<<<< Updated upstream:api/db_models/workflow.py
+# статусы для вебсокета
 
-class WorkflowTask(Base):
-=======
 class Task(Base):
->>>>>>> Stashed changes:api/db_models/Task.py
-    __tablename__ = "workflow_tasks"
+    __tablename__ = "task"
 
-    client_id = Column(String, primary_key=True)
-    workflow_id = Column(String, primary_key=True)
-    event_type = Column(String,)  # enum
-    status = Column(String,)  # success, error
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(String, nullable=False)
+    workflow_id = Column(String, nullable=False)
+    status = Column(Enum("created",
+                        "audio_conversion_started",
+                        "audio_conversion_finished",
+                        "audio_transcription_started",
+                        "audio_transcription_finished",
+                        "audio_dubbing_started",
+                        "audio_dubbing_finished",
+                        "finished",
+                        "canceled",
+                        name="TaskStatus"), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.now())

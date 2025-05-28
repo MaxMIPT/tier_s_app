@@ -1,23 +1,23 @@
 import datetime
 
-from sqlalchemy import Column, Enum, String, Integer, DateTime
+from sqlalchemy import Column, DateTime, Enum, Integer, String
 
 from db import Base
 
-<<<<<<< Updated upstream:api/db_models/workflow_result.py
+# сервисные логи
 
-# TODO: Переименовать WorkflowResult, WorkflowTask -- избавиться от workflow et.c
-class WorkflowResult(Base):
-=======
 class Result(Base):
->>>>>>> Stashed changes:api/db_models/Result.py
-    __tablename__ = "workflow_result"
+    __tablename__ = "result"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, autoincrement=True, primary_key=True, index=True)
+    workflow_id = Column(String, unique=True, nullable=False)
     client_id = Column(String, unique=True, nullable=False)
-    original_file = Column(String, nullable=True)
+    original_file = Column(String)
     converted_file = Column(String, nullable=True)
     restored_text = Column(String, nullable=True)
     voiced_text = Column(String, nullable=True)
-    status = Column(Enum("success", "failed", "running", name="workflow_status_enum"), nullable=True)
+    status = Column(Enum("success",
+                        "failed",
+                        "running", 
+                        name="RusultStatus"), nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.now())

@@ -1,5 +1,6 @@
-from aiobotocore.session import get_session
 from contextlib import asynccontextmanager
+
+from aiobotocore.session import get_session
 
 from config import settings
 

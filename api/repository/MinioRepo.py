@@ -1,9 +1,9 @@
 import uuid
+from io import BytesIO
 
 from aiobotocore.session import ClientCreatorContext
 from botocore.exceptions import ClientError
 from fastapi import HTTPException, status
-from io import BytesIO
 
 from config import settings
 
@@ -32,6 +32,9 @@ class MinioRepository:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+# -------------------------------------------------------------
+
 
     async def get_file(
         self,
