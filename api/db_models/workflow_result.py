@@ -1,6 +1,11 @@
-from sqlalchemy import Column, Enum, String, Integer
+import datetime
+
+from sqlalchemy import Column, Enum, String, Integer, DateTime
+
 from db import Base
 
+
+# TODO: Переименовать WorkflowResult, WorkflowTask -- избавиться от workflow et.c
 class WorkflowResult(Base):
     __tablename__ = "workflow_result"
 
@@ -11,3 +16,4 @@ class WorkflowResult(Base):
     restored_text = Column(String, nullable=True)
     voiced_text = Column(String, nullable=True)
     status = Column(Enum("success", "failed", "running", name="workflow_status_enum"), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.now())
