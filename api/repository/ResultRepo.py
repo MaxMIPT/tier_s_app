@@ -1,7 +1,7 @@
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from db_models.Result import Result
-from schemas import ResultModel, UpdateResultMode
+from schemas import ResultModel, UpdateResultModel
 
 class ResultRepository:
 
@@ -29,7 +29,7 @@ class ResultRepository:
 
     async def update(self, 
                     db: AsyncSession, 
-                    updateResultSchema: UpdateResultMode):
+                    updateResultSchema: UpdateResultModel):
         
         await db.execute(
             update(Result).where(Result.workflow_id == updateResultSchema.workflow_id).values(

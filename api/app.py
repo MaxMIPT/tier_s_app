@@ -31,8 +31,10 @@ async def lifespan(app: FastAPI):
     app.state.temporal_client = await Client.connect(
         "temporal:7233", namespace="default"
     )
+
     await init_db()
-    await get_new_data
+    db_session = await anext(get_db())
+    await get_new_data(connections, clients, db_session)
     await create_bucket(bucket_name=settings.minio.bucket_name)
     yield
 

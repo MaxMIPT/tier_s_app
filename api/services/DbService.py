@@ -1,7 +1,7 @@
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from api.repository.ResultRepo import ResultRepo
-from api.repository.TaskRepo import TaskRepo
+from repository.ResultRepo import ResultRepo
+from repository.TaskRepo import TaskRepo
 from schemas import ResultModel, UpdateResultModel, TaskModel
 
 class DBService:
@@ -28,6 +28,8 @@ class DBService:
                         taskModelSchema: TaskModel) -> None:
         
         await TaskRepo.insert(db, taskModelSchema)
+
+# -------------------------------------------------------
 
     async def taskGet(self,
                     db: AsyncSession,
