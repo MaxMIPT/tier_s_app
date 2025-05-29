@@ -9,7 +9,7 @@ async def create_bucket(bucket_name: str):
         "s3",
         endpoint_url=settings.minio.endpoint_url,
         aws_access_key_id=settings.minio.access_key,
-        aws_secret_access_key=settings.minio.secret_key
+        aws_secret_access_key=settings.minio.secret_key,
     ) as s3:
         try:
             await s3.create_bucket(Bucket=bucket_name)

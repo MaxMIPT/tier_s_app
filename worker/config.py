@@ -44,8 +44,7 @@ settings = Settings(
         endpoint_url=os.environ.get("MINIO_ENDPOINT_URL"),
     ),
     redis=RedisConfig(
-        host=os.environ.get("REDIS_HOST"),
-        port=int(os.environ.get("REDIS_PORT"))
+        host=os.environ.get("REDIS_HOST"), port=int(os.environ.get("REDIS_PORT"))
     ),
-    DATABASE_URL=os.environ.get("DATABASE_URL")
+    DATABASE_URL=os.environ.get("DATABASE_URL"),
 )

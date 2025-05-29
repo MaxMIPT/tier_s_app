@@ -1,9 +1,24 @@
+import asyncio
+import datetime
+
 from contextlib import asynccontextmanager
 from tempfile import TemporaryDirectory
 from uuid import uuid4
+import logging
 
-from fastapi import (Depends, FastAPI, File, HTTPException, Response,
-                     UploadFile, WebSocket, WebSocketDisconnect, status)
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    HTTPException,
+    Response,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from temporalio.client import Client
@@ -20,9 +35,11 @@ from minio import create_bucket
 from services.MinioService import minio_service
 from services.WebsocketService import get_new_data
 from services.DbService import dbService
-import schemas
+
 
 RUN_WORKFLOW_TASK_QUEUE_NAME = "RUN_WORKFLOW_TASK"
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("worker")
 
 
 @asynccontextmanager
@@ -33,8 +50,8 @@ async def lifespan(app: FastAPI):
     )
 
     await init_db()
-    db_session = await anext(get_db())
-    await get_new_data(connections, clients, db_session)
+    # db_session = await anext(get_db())
+    # await get_new_data(1, clients, anext(get_db()))
     await create_bucket(bucket_name=settings.minio.bucket_name)
     yield
 
@@ -54,44 +71,54 @@ async def upload_and_process_audio(
     file_url = await minio_service.add_any_file(
         minio_client=minio_client, file=file, filename=file.filename
     )
-    
+
     workflow_id = uuid4()
 
     await client.start_workflow(
         "Workflow",
         args=[file_url, client_id],
         id=f"{workflow_id}",
-        task_queue=RUN_WORKFLOW_TASK_QUEUE_NAME
+        task_queue=RUN_WORKFLOW_TASK_QUEUE_NAME,
     )
 
-    await dbService.taskInsert(db, client_id = client_id, 
-                     workflow_id = workflow_id, status = schemas.TaskStatus.CREATED)
-    
-    await dbService.resultInsert(db, workflow_id = workflow_id,
-                    client_id=client_id,
-                    original_file=file_url,
-                    status=schemas.ResultStatus.running)
+    await dbService.create_task(
+        db=db,
+        schema=schemas.TaskModel(
+            client_id=client_id,
+            workflow_id=workflow_id,
+            status=schemas.TaskStatus.CREATED,
+        ),
+    )
+
+    await dbService.create_result(
+        db=db,
+        schema=schemas.ResultModel(
+            workflow_id=workflow_id,
+            client_id=client_id,
+            original_file=file_url,
+            status=schemas.ResultStatus.running,
+        ),
+    )
 
 
-@app.post("/workflow-update-result")
-async def create_workflow_results(
+@app.patch("/workflows")
+async def patch_workflow_result(
     payload: schemas.ResultModel,
     db: AsyncSession = Depends(get_db),
 ):
-    await dbService.resultUpdate(db, payload)
+    await dbService.update_result(db, payload)
 
 
-@app.post("/workflow-insert-task")
-async def create_workflow_results(
+@app.post("/tasks")
+async def create_new_task(
     payload: schemas.TaskModel,
     db: AsyncSession = Depends(get_db),
 ):
-    await dbService.taskInsert(db, payload)
+    await dbService.create_task(db, payload)
 
 
 @app.get("/files/{path}")
-async def download_file(path:str,
-    minio_client=Depends(minio_client.get_client)):
+async def download_file(path: str, minio_client=Depends(minio_client.get_client)):
     file = await minio_service.get_file(minio_client, path)
     return Response(
         content=file,
@@ -99,34 +126,46 @@ async def download_file(path:str,
         headers={"Content-Disposition": f'attachment; filename="{path}"'},
     )
 
-@app.post("/files") 
-async def upload_file(file: UploadFile = File(...),
-    minio_client=Depends(minio_client.get_client)):
+
+@app.post("/files")
+async def upload_file(
+    file: UploadFile = File(...), minio_client=Depends(minio_client.get_client)
+):
     file_url = await minio_service.add_any_file(
         minio_client=minio_client, file=file, filename=file.filename
     )
     return file_url
 
 
-connections = {}
 clients = {}
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(ws: WebSocket):
+# TODO: сделать клиента
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(ws: WebSocket, client_id: str):
     await ws.accept()
     connection_id = str(uuid4())
 
-    try:
-        init_msg = await ws.receive_json()
-        if init_msg.get("message_type") != "set_client_id":
-            await ws.close(code=400)
-            return
+    if client_id not in clients.keys():
+        clients[client_id] = dict()
 
-        connections[connection_id] = ws
-        client_id = init_msg.get("client_id")
-        clients.setdefault(client_id, []).append(connection_id)
-        
-    finally:
-        del connections[connection_id]
-        clients[client_id].remove(connection_id)
+    clients[client_id][connection_id] = ws
+    engine = create_async_engine(settings.DATABASE_URL, echo=True)
+    async_session_maker = async_sessionmaker(
+        bind=engine, class_=AsyncSession, expire_on_commit=False
+    )
+    last_date = None
+    while True:
+        await asyncio.sleep(5)
+        async with async_session_maker() as db_client:
+            data_list = await dbService.get_tasks(
+                db=db_client, client_id=client_id, date_filter=last_date
+            )
+
+        for data in data_list:
+            for conn, websocket in clients[client_id].items():
+                await websocket.send_text(data.status)
+                if data.status == "finished":
+                    del clients[client_id][conn]
+
+            last_date = data.created_at

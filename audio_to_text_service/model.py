@@ -1,13 +1,13 @@
 import asyncio
 from temporalio import activity
-from worker.clients.minio_client import minio_client 
+from worker.clients.minio_client import minio_client
 from services.minio_service import add_new_file, get_file, delete_file
 from Model1 import model1
+
 
 @activity.defn
 async def _2_convert_to_text(file_url) -> str:
 
-    
     # 1. upload from_1_path from minio
     file_to_model1 = await get_file(minio_client, file_url)
     # 2. run model 1

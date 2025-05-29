@@ -78,6 +78,8 @@ services:
 
   convertion:
     container_name: convertion
+    ports:
+      - "8002:8002"
     build:
       context: ./audio_converter_service
 
@@ -108,7 +110,7 @@ services:
       postgres:
         condition: service_healthy
       temporal:
-        condition: service_started
+        condition: service_healthy
 
   worker:
     container_name: worker
@@ -122,6 +124,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_started
+      temporal:
+        condition: service_healthy
 
 volumes:
   postgres_data_app:

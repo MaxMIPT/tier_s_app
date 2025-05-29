@@ -3,45 +3,31 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db_models.Result import Result
 from schemas import ResultModel, UpdateResultModel
 
+
 class ResultRepository:
 
-# -----------------------------------------------------------------------------------
-
-    async def insert(
-            self,
-            db: AsyncSession,
-            resultSchema: ResultModel
-    ) -> None:
-        
+    async def insert(self, db: AsyncSession, resultSchema: ResultModel) -> None:
         obj = Result(
-            resultSchema.workflow_id,
+            workflow_id=resultSchema.workflow_id,
             client_id=resultSchema.client_id,
             original_file=resultSchema.original_file,
             converted_file=resultSchema.converted_file,
             restored_text=resultSchema.restored_text,
-            voiced_text=resultSchema.voiced_text
+            voiced_text=resultSchema.voiced_text,
+            status=resultSchema.status,
         )
-
         db.add(obj)
         await db.commit()
 
-# ---------------------------------------------------------------
-
-    async def update(self, 
-                    db: AsyncSession, 
-                    updateResultSchema: UpdateResultModel):
-        
+    async def update(self, db: AsyncSession, updateResultSchema: UpdateResultModel):
         await db.execute(
-            update(Result).where(Result.workflow_id == updateResultSchema.workflow_id).values(
+            update(Result)
+            .where(Result.workflow_id == updateResultSchema.workflow_id)
+            .values(
                 status=updateResultSchema.status,
                 converted_file=updateResultSchema.converted_file,
                 restored_text=updateResultSchema.restored_text,
                 voiced_text=updateResultSchema.voiced_text,
             )
         )
-
         await db.commit()
-
-# -----------------------------------------------------------------------------------
-
-ResultRepo = ResultRepository()

@@ -10,17 +10,11 @@ from config import settings
 
 class MinioRepository:
 
-# -----------------------------------------------------------------------------------
-
     def __init__(self):
         self.bucket_name = settings.minio.bucket_name
 
-# -----------------------------------------------------------------------------------
-
     async def upload_file(
-        self, minio_client: ClientCreatorContext,
-        file: BytesIO,
-        filename: str
+        self, minio_client: ClientCreatorContext, file: BytesIO, filename: str
     ) -> str:
         object_name = str(uuid.uuid4()) + "." + filename.split(".")[-1]
         try:
@@ -33,12 +27,7 @@ class MinioRepository:
             return object_name
 
         except ClientError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-# -------------------------------------------------------------
-
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     async def get_file(
         self,
@@ -53,9 +42,7 @@ class MinioRepository:
                 data = await response["Body"].read()
                 return data
         except ClientError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-# -----------------------------------------------------------------------------------
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 minio_repo = MinioRepository()

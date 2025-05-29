@@ -1,10 +1,5 @@
-import random
+from uuid import uuid4
 
-def audio_converter(file):
-    magic_number = random.randint(1, 10)
-    if magic_number == 1:
-        raise Exception
-    else:
-        with open("./example.wav", "rb") as file:
-            data = file.read()
-        return data
+
+async def audio_converter(file):
+    return f"{uuid4()}.mp4"
