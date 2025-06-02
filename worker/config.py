@@ -3,34 +3,18 @@ import os
 from pydantic import BaseModel
 
 
-class MinioConfig(BaseModel):
-    access_key: str
-    secret_key: str
-    bucket_name: str
-    endpoint_url: str
-
-
-class RedisConfig(BaseModel):
-    host: str
-    port: int
-
-
 class Settings(BaseModel):
-    minio: MinioConfig
-    redis: RedisConfig
-    DATABASE_URL: str
+    RUN_WORKFLOW_TASK_QUEUE_NAME: str
+    CONVERT_API: str
+    TEXT_API: str
+    AUDIO_API: str
 
 
 settings = Settings(
-    minio=MinioConfig(
-        access_key=os.environ.get("MINIO_ACCESS_KEY"),
-        secret_key=os.environ.get("MINIO_SECRET_KEY"),
-        bucket_name=os.environ.get("MINIO_BUCKET"),
-        endpoint_url=os.environ.get("MINIO_ENDPOINT_URL"),
+    CONVERT_API=os.environ.get("CONVERT_API"),
+    TEXT_API=os.environ.get("TEXT_API"),
+    AUDIO_API=os.environ.get("AUDIO_API"),
+    RUN_WORKFLOW_TASK_QUEUE_NAME=os.environ.get(
+        "RUN_WORKFLOW_TASK_QUEUE_NAME"
     ),
-    redis=RedisConfig(
-        host=os.environ.get("REDIS_HOST"),
-        port=int(os.environ.get("REDIS_PORT"))
-    ),
-    DATABASE_URL=os.environ.get("DATABASE_URL")
 )

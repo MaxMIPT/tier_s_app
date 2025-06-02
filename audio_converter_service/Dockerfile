@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-WORKDIR /worker
+WORKDIR /audio_converter_service
 
 COPY pyproject.toml .
 
@@ -11,4 +11,4 @@ RUN poetry install --no-root
 
 COPY . .
 
-CMD ["poetry", "run", "python3.12", "run_worker.py"]
+CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002"]

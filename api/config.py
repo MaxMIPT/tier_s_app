@@ -1,4 +1,5 @@
 import os
+
 from pydantic import BaseModel
 
 
@@ -25,8 +26,8 @@ class RedisConfig(BaseModel):
 class Settings(BaseModel):
     db: DBConfig
     minio: MinioConfig
-    redis: RedisConfig
     DATABASE_URL: str
+    RUN_WORKFLOW_TASK_QUEUE_NAME: str = "RUN_WORKFLOW_TASK"
 
 
 settings = Settings(
@@ -43,9 +44,8 @@ settings = Settings(
         bucket_name=os.environ.get("MINIO_BUCKET"),
         endpoint_url=os.environ.get("MINIO_ENDPOINT_URL"),
     ),
-    redis=RedisConfig(
-        host=os.environ.get("REDIS_HOST"),
-        port=int(os.environ.get("REDIS_PORT"))
+    DATABASE_URL=os.environ.get("DATABASE_URL"),
+    RUN_WORKFLOW_TASK_QUEUE_NAME=os.environ.get(
+        "RUN_WORKFLOW_TASK_QUEUE_NAME"
     ),
-    DATABASE_URL=os.environ.get("DATABASE_URL")
 )

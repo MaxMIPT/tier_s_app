@@ -1,5 +1,6 @@
-from aiobotocore.session import get_session
 from contextlib import asynccontextmanager
+
+from aiobotocore.session import get_session
 
 from config import settings
 
@@ -7,10 +8,11 @@ from config import settings
 class MinioClient:
 
     def __init__(
-        self, access_key: str,
+        self,
+        access_key: str,
         secret_key: str,
         bucket_name: str,
-        endpoint_url: str
+        endpoint_url: str,
     ):
         self.config = {
             "aws_access_key_id": access_key,
