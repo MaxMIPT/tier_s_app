@@ -1,3 +1,2 @@
-def model3(file):
-    # returns file which has gone through model3
-    return file
+async def create_audio(file):
+    return b"new audio"

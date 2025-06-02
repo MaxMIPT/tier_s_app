@@ -1,11 +1,9 @@
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import declarative_base
 
 from config import settings
+from db_models import Base
 
 engine = create_async_engine(settings.DATABASE_URL, echo=True)
-
-Base = declarative_base()
 
 
 async def init_db():

@@ -1,6 +1,5 @@
 import os
 
-from dotenv import load_dotenv
 from pydantic import BaseModel
 
 
@@ -28,6 +27,7 @@ class Settings(BaseModel):
     db: DBConfig
     minio: MinioConfig
     DATABASE_URL: str
+    RUN_WORKFLOW_TASK_QUEUE_NAME: str = "RUN_WORKFLOW_TASK"
 
 
 settings = Settings(
@@ -45,4 +45,7 @@ settings = Settings(
         endpoint_url=os.environ.get("MINIO_ENDPOINT_URL"),
     ),
     DATABASE_URL=os.environ.get("DATABASE_URL"),
+    RUN_WORKFLOW_TASK_QUEUE_NAME=os.environ.get(
+        "RUN_WORKFLOW_TASK_QUEUE_NAME"
+    ),
 )

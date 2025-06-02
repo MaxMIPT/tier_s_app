@@ -1,12 +1,14 @@
 import asyncio
+import logging
+
+import activities
+
 from temporalio.client import Client
 from temporalio.worker import Worker
-import activities
+
+from config import settings
 from workflow_def import Workflow
 
-from shared import RUN_WORKFLOW_TASK_QUEUE_NAME
-
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("worker")
@@ -20,12 +22,15 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue=RUN_WORKFLOW_TASK_QUEUE_NAME,
+        task_queue=settings.RUN_WORKFLOW_TASK_QUEUE_NAME,
         debug_mode=True,
         workflows=[Workflow],
         activities=[
-            activities.convertion_act.task_1_run_convertation,
-            activities.db_act.insert_to_database,
+            activities.convert_audio,
+            activities.create_audio,
+            activities.create_text,
+            activities.send_task,
+            activities.send_result,
         ],
     )
 

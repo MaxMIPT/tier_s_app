@@ -82,6 +82,26 @@ services:
       - "8002:8002"
     build:
       context: ./audio_converter_service
+    environment:
+      API_URL: "http://api:8000"
+
+  text:
+    container_name: text
+    ports:
+      - "8003:8003"
+    build:
+      context: ./audio_to_text_service
+    environment:
+      API_URL: "http://api:8000"
+
+  audio:
+    container_name: audio
+    ports:
+      - "8004:8004"
+    build:
+      context: ./text_to_audio_service
+    environment:
+      API_URL: "http://api:8000"
 
   api:
     container_name: api
@@ -91,7 +111,6 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/dbname
-      TEMPORAL_SERVICE: temporal:7233
       # DB
       POSTGRES_DB: dbname
       POSTGRES_USER: user
@@ -103,6 +122,9 @@ services:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_BUCKET: uploads
+      # TEMPORAL
+      TEMPORAL_SERVICE: temporal:7233
+      RUN_WORKFLOW_TASK_QUEUE_NAME: RUN_WORKFLOW_TASK
 
     depends_on:
       minio:
@@ -118,7 +140,13 @@ services:
       context: ./worker
     environment:
       DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/dbname
+      # Temporal
       TEMPORAL_SERVICE: temporal:7233
+      RUN_WORKFLOW_TASK_QUEUE_NAME: RUN_WORKFLOW_TASK
+      # Model services
+      CONVERT_API: http://convertion:8002
+      TEXT_API: http://text:8003
+      AUDIO_API: http://audio:8004
     depends_on:
       postgres:
         condition: service_healthy

@@ -2,7 +2,7 @@ import asyncio
 
 import schemas
 
-from services.DbService import dbService
+from services.WorkflowService import workflow_service
 
 
 async def get_new_data(connections, clients, db_client):
@@ -11,7 +11,9 @@ async def get_new_data(connections, clients, db_client):
         while True:
             await asyncio.sleep(5)
 
-            data_list = await dbService.get_tasks(db_client, current_id)  # None
+            data_list = await workflow_service.get_tasks(
+                db_client, current_id
+            )  # None
             if data_list:
                 current_id += len(data_list)
                 for data in data_list:

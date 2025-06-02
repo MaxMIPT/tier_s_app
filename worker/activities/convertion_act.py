@@ -1,17 +1,15 @@
-from asyncio import sleep
-
 from temporalio import activity
+
+from config import settings
 
 
 @activity.defn
-async def task_1_run_convertation(file_url: str) -> str:
+async def convert_audio(file_path: str) -> dict:
     from httpx import AsyncClient
 
-    await sleep(5)
     async with AsyncClient() as client:
         converted_file_name = await client.post(
-            "http://convertion:8002/convert", params=dict(file_url=file_url)
+            f"{settings.CONVERT_API}/convert", params=dict(file_path=file_path)
         )
 
-    await sleep(5)
-    return converted_file_name.text
+    return {"status": "running", "converted_file": converted_file_name.json()}

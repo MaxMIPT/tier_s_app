@@ -2,7 +2,7 @@ import datetime
 
 from sqlalchemy import Column, DateTime, Integer, String, Enum, UUID
 
-from db import Base
+from .base import Base
 
 
 class Task(Base):
@@ -30,4 +30,6 @@ class Task(Base):
         ),
         nullable=True,
     )
-    created_at = Column(DateTime, nullable=False, default=datetime.datetime.now())
+    created_at = Column(
+        DateTime, nullable=False, default=datetime.datetime.now()
+    )

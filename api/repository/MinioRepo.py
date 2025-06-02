@@ -27,7 +27,9 @@ class MinioRepository:
             return object_name
 
         except ClientError:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     async def get_file(
         self,
@@ -42,7 +44,6 @@ class MinioRepository:
                 data = await response["Body"].read()
                 return data
         except ClientError:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-minio_repo = MinioRepository()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
