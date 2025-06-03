@@ -1,5 +1,4 @@
 import uuid
-from io import BytesIO
 
 from aiobotocore.session import ClientCreatorContext
 from botocore.exceptions import ClientError
@@ -7,6 +6,7 @@ from fastapi import HTTPException, status
 
 from config import settings
 import filetype
+
 
 class MinioRepository:
 

@@ -66,4 +66,3 @@ class Task_x_Result(BaseSchema):
     process_converted_file_url: Optional[str] = (None,)
     process_transcripted_text: Optional[str] = (None,)
     process_dubbed_file_url: Optional[str] = (None,)
-

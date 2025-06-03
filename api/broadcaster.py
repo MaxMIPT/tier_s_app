@@ -1,17 +1,16 @@
 import asyncio
-import uuid
 
 from datetime import datetime
 from typing import Optional, Dict, Any
 
 from pydantic import BaseModel
-from fastapi.websockets import WebSocket
 
 from services import workflow_service
 from clients import get_db
 
 # структура: {client_id: {"websocket": ..., "channel": ..., "last_time": ...}}
 websocket_clients: Dict[str, Dict[str, Any]] = {}
+
 
 class TaskEventItem(BaseModel):
     id: str
@@ -25,13 +24,16 @@ class TaskEventItem(BaseModel):
     process_dubbed_file_url: Optional[str] = None
     process_transcripted_text: Optional[str] = None
 
+
 class TaskEventData(BaseModel):
     task_log_id: int
     task: TaskEventItem
     created_at: str
 
+
 class TaskEventPing(BaseModel):
     pass
+
 
 async def broadcast(logger):
     db_client = await anext(get_db())
@@ -71,11 +73,13 @@ async def broadcast(logger):
                 await client_data["channel"].put(task_event)
                 client_data["last_time"] = data.created_at
 
+
 async def send_pings():
     while True:
         await asyncio.sleep(10)
         for client_data in websocket_clients.values():
             await client_data["channel"].put(TaskEventPing())
+
 
 async def stop_broadcast(logger):
     for conn in list(websocket_clients.values()):

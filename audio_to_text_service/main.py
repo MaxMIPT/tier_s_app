@@ -1,4 +1,3 @@
-import io
 import tempfile
 import model
 
@@ -14,7 +13,6 @@ app = FastAPI()
 async def convert_to_text(file_path: str):
     # 1. get file original from minio
     file_bytes = await file_service.get_file(filename=file_path)
-    file_obj = io.BytesIO(file_bytes)
 
     with tempfile.NamedTemporaryFile(
             suffix=".wav", delete=False) as tmp_input:

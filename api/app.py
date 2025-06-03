@@ -12,6 +12,8 @@ from fastapi import (
     Response,
     UploadFile,
     WebSocket,
+    HTTPException,
+    status
 )
 from minio import create_bucket
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,6 +39,7 @@ setup_logger()
 logger = logging.getLogger("websocket")
 logger.setLevel(logging.INFO)
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.temporal_client = await Client.connect(  # noqa
@@ -53,11 +56,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"], 
+    CORSMiddleware, allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"],
 )
 
 
@@ -76,12 +76,12 @@ async def upload_and_process_audio(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Файл не является аудиофайлом",
         )
-    
 
     file_url = await minio_service.add_any_file(
-        minio_client=minio_client, file=file_bytes, filename=file.filename
+        minio_client=minio_client,
+        file=file_bytes,
+        filename=file.filename
     )
-
     workflow_id = uuid.uuid4()
 
     await workflow_service.start_workflow(

@@ -1,15 +1,15 @@
 from pathlib import Path
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 from peft import PeftModel
-import torchaudio, torch
+import torchaudio
 
 
-BASE_ID   = "openai/whisper-small"
-ADAPTER   = Path(r"./whisper-small-lora-ru")
+BASE_ID = "openai/whisper-small"
+ADAPTER = Path(r"./whisper-small-lora-ru")
 
-base   = WhisperForConditionalGeneration.from_pretrained(BASE_ID)
-model  = PeftModel.from_pretrained(base, ADAPTER, local_files_only=True).to("cpu")
-proc   = WhisperProcessor.from_pretrained(BASE_ID)
+base = WhisperForConditionalGeneration.from_pretrained(BASE_ID)
+model = PeftModel.from_pretrained(base, ADAPTER, local_files_only=True).to("cpu")
+proc = WhisperProcessor.from_pretrained(BASE_ID)
 
 
 async def audio_to_text(file_path) -> str:

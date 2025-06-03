@@ -18,9 +18,11 @@ model, _ = torch.hub.load(
     trust_repo=True
 )
 
+
 # Функция для транслитерации английских слов
 def transliterate_en_words(text_):
     return re.sub(r'\b[a-zA-Z]+\b', lambda m: translit(m.group(), 'ru'), text_)
+
 
 def text_to_audio(text_: str):
     processed_text = transliterate_en_words(text_)

@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 
 from repository import MinioRepository
 
+
 class MinioService:
 
     def __init__(self):
