@@ -1,160 +1,171 @@
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres
-    environment:
-      POSTGRES_DB: dbname
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data_app:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d dbname"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    nginx:
+        image: nginx:1.25-alpine
+        depends_on:
+            - minio
+            - api
+        volumes:
+            - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+        restart: always
+        ports:
+            - "${NGINX_PORT:-80}:80"
 
-  temporal:
-    image: temporalio/auto-setup:1.27.2
-    container_name: temporal
-    ports:
-      - "7233:7233"
-    environment:
-      DB: postgres12
-      DB_PORT: 5432
-      POSTGRES_USER: user
-      POSTGRES_PWD: password
-      POSTGRES_SEEDS: postgres
-      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development-sql.yaml
-      ENABLE_ES: false
-      TEMPORAL_ADDRESS: temporal:7233
-      TEMPORAL_CLI_ADDRESS: temporal:7233
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./worker/dynamicconfig:/etc/temporal/config/dynamicconfig
-    healthcheck:
-      test: ["CMD", "tctl", "--namespace", "default", "workflow", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    postgres:
+        image: postgres:15
+        container_name: postgres
+        environment:
+            POSTGRES_DB: dbname
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data_app:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U user -d dbname"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
 
-  minio:
-    image: quay.io/minio/minio
-    container_name: minio
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    command: ["server", "/data", "--console-address", ":9001"]
-    volumes:
-      - minio_data:/data
+    temporal:
+        image: temporalio/auto-setup:1.27.2
+        container_name: temporal
+        ports:
+            - "7233:7233"
+        environment:
+            DB: postgres12
+            DB_PORT: 5432
+            POSTGRES_USER: user
+            POSTGRES_PWD: password
+            POSTGRES_SEEDS: postgres
+            DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development-sql.yaml
+            ENABLE_ES: false
+            TEMPORAL_ADDRESS: temporal:7233
+            TEMPORAL_CLI_ADDRESS: temporal:7233
+        depends_on:
+            postgres:
+                condition: service_healthy
+        volumes:
+            - ./worker/dynamicconfig:/etc/temporal/config/dynamicconfig
+        healthcheck:
+            test: ["CMD", "tctl", "--namespace", "default", "workflow", "list"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
 
-  temporal-admin-tools:
-    container_name: temporal-admin-tools
-    depends_on:
-      - temporal
-    environment:
-      - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CLI_ADDRESS=temporal:7233
-    image: temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0
-    stdin_open: true
-    tty: true
+    minio:
+        image: quay.io/minio/minio
+        container_name: minio
+        environment:
+            MINIO_ROOT_USER: minioadmin
+            MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+            - "9000:9000"
+            - "9001:9001"
+        command: ["server", "/data", "--console-address", ":9001"]
+        volumes:
+            - minio_data:/data
 
-  temporal-ui:
-    depends_on:
-      - temporal
-    environment:
-      - TEMPORAL_ADDRESS=temporal:7233
-      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
-    image: temporalio/ui:2.34.0
-    ports:
-      - 8080:8080
+    temporal-admin-tools:
+        container_name: temporal-admin-tools
+        depends_on:
+            - temporal
+        environment:
+            - TEMPORAL_ADDRESS=temporal:7233
+            - TEMPORAL_CLI_ADDRESS=temporal:7233
+        image: temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0
+        stdin_open: true
+        tty: true
 
-  convertion:
-    container_name: convertion
-    ports:
-      - "8002:8002"
-    build:
-      context: ./audio_converter_service
-    environment:
-      API_URL: "http://api:8000"
+    temporal-ui:
+        depends_on:
+            - temporal
+        environment:
+            - TEMPORAL_ADDRESS=temporal:7233
+            - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+        image: temporalio/ui:2.34.0
+        ports:
+            - 8080:8080
 
-  text:
-    container_name: text
-    ports:
-      - "8003:8003"
-    build:
-      context: ./audio_to_text_service
-    environment:
-      API_URL: "http://api:8000"
+    convertion:
+        container_name: convertion
+        ports:
+            - "8002:8002"
+        build:
+            context: ./audio_converter_service
+        environment:
+            API_URL: "http://api:8000"
 
-  audio:
-    container_name: audio
-    ports:
-      - "8004:8004"
-    build:
-      context: ./text_to_audio_service
-    environment:
-      API_URL: "http://api:8000"
+    text:
+        container_name: text
+        ports:
+            - "8003:8003"
+        build:
+            context: ./audio_to_text_service
+        environment:
+            API_URL: "http://api:8000"
 
-  api:
-    container_name: api
-    build:
-      context: ./api
-    ports:
-      - "8000:8000"
-    environment:
-      DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/dbname
-      # DB
-      POSTGRES_DB: dbname
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      # Minio
-      MINIO_ENDPOINT_URL: http://minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_BUCKET: uploads
-      # TEMPORAL
-      TEMPORAL_SERVICE: temporal:7233
-      RUN_WORKFLOW_TASK_QUEUE_NAME: RUN_WORKFLOW_TASK
+    audio:
+        container_name: audio
+        ports:
+            - "8004:8004"
+        build:
+            context: ./text_to_audio_service
+        environment:
+            API_URL: "http://api:8000"
 
-    depends_on:
-      minio:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-      temporal:
-        condition: service_healthy
+    api:
+        container_name: api
+        build:
+            context: ./api
+        ports:
+            - "8000:8000"
+        environment:
+            DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/dbname
+            # DB
+            POSTGRES_DB: dbname
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
+            POSTGRES_HOST: postgres
+            POSTGRES_PORT: 5432
+            # Minio
+            MINIO_ENDPOINT_URL: http://minio:9000
+            MINIO_ACCESS_KEY: minioadmin
+            MINIO_SECRET_KEY: minioadmin
+            MINIO_BUCKET: uploads
+            # TEMPORAL
+            TEMPORAL_SERVICE: temporal:7233
+            RUN_WORKFLOW_TASK_QUEUE_NAME: RUN_WORKFLOW_TASK
 
-  worker:
-    container_name: worker
-    build:
-      context: ./worker
-    environment:
-      DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/dbname
-      # Temporal
-      TEMPORAL_SERVICE: temporal:7233
-      RUN_WORKFLOW_TASK_QUEUE_NAME: RUN_WORKFLOW_TASK
-      # Model services
-      CONVERT_API: http://convertion:8002
-      TEXT_API: http://text:8003
-      AUDIO_API: http://audio:8004
-    depends_on:
-      postgres:
-        condition: service_healthy
-      minio:
-        condition: service_started
-      temporal:
-        condition: service_healthy
+        depends_on:
+            minio:
+                condition: service_started
+            postgres:
+                condition: service_healthy
+            temporal:
+                condition: service_healthy
+
+    worker:
+        container_name: worker
+        build:
+            context: ./worker
+        environment:
+            DATABASE_URL: postgresql+asyncpg://user:password@postgres:5432/dbname
+            # Temporal
+            TEMPORAL_SERVICE: temporal:7233
+            RUN_WORKFLOW_TASK_QUEUE_NAME: RUN_WORKFLOW_TASK
+            # Model services
+            CONVERT_API: http://convertion:8002
+            TEXT_API: http://text:8003
+            AUDIO_API: http://audio:8004
+        depends_on:
+            postgres:
+                condition: service_healthy
+            minio:
+                condition: service_started
+            temporal:
+                condition: service_healthy
 
 volumes:
-  postgres_data_app:
-  minio_data:
+    postgres_data_app:
+    minio_data:
