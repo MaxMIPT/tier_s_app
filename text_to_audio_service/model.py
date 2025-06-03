@@ -7,7 +7,7 @@ import tempfile
 from transliterate import translit
 from pathlib import Path
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 print(device)
 
 model, _ = torch.hub.load(
