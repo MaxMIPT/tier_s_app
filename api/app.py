@@ -17,6 +17,8 @@ from minio import create_bucket
 from sqlalchemy.ext.asyncio import AsyncSession
 from temporalio.client import Client
 
+from fastapi.middleware.cors import CORSMiddleware
+
 
 from app_logging import setup_logger, logging
 from clients import get_db, get_temporal_client, minio_client
@@ -28,6 +30,7 @@ from schemas import ResultModel, ResultStatus, TaskModel, TaskStatus
 from broadcaster import broadcast, send_pings, stop_broadcast
 from websocket_broadcast import websocket_broadcast_handler
 
+import filetype
 
 setup_logger()
 
@@ -49,6 +52,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"], 
+)
+
 
 @app.post("/process", response_model=ResultModel)
 async def upload_and_process_audio(
@@ -58,8 +69,17 @@ async def upload_and_process_audio(
     minio_client=Depends(minio_client.get_client),
     db: AsyncSession = Depends(get_db),
 ):
+    file_bytes = await file.read()
+    content_type = filetype.guess(file_bytes)
+    if content_type is None or not content_type.mime.startswith("audio/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Файл не является аудиофайлом",
+        )
+    
+
     file_url = await minio_service.add_any_file(
-        minio_client=minio_client, file=file, filename=file.filename
+        minio_client=minio_client, file=file_bytes, filename=file.filename
     )
 
     workflow_id = uuid.uuid4()
@@ -166,8 +186,9 @@ async def download_file(
 async def upload_file(
     file: UploadFile = File(...), minio_client=Depends(minio_client.get_client)
 ):
+    file_bytes = await file.read()
     file_url = await minio_service.add_any_file(
-        minio_client=minio_client, file=file, filename=file.filename
+        minio_client=minio_client, file=file_bytes, filename=file.filename
     )
     return file_url
 

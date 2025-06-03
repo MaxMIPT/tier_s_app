@@ -32,7 +32,7 @@ async def websocket_broadcast_handler(websocket: WebSocket, client_id: str, logg
                 if isinstance(data, TaskEventData):
                     await websocket.send_json(data.dict())
                 elif isinstance(data, TaskEventPing):
-                    await websocket.send_bytes(b'ping')
+                    await websocket.send_json({"type": "ping"})
 
         async def receive_loop():
             while True:
