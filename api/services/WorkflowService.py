@@ -87,5 +87,19 @@ class WorkflowService:
         )
         return
 
+    async def delete_workflow(
+        self,
+        db: AsyncSession,
+        temporal_client: Client,
+        workflow_id: uuid.UUID,
+    ) -> None:
+        await self.result_repo.delete(db=db, workflow_id=workflow_id)
+        await self.task_repo.delete(db=db, workflow_id=workflow_id)
+        await self.workflow_repo.termiate_workflow(
+            temporal_client=temporal_client, workflow_id=workflow_id
+        )
+        return
+
+
 
 workflow_service = WorkflowService()

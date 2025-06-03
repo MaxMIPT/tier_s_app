@@ -27,8 +27,10 @@ from services import minio_service, workflow_service
 from schemas import ResultModel, ResultStatus, TaskModel, TaskStatus
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("worker")
+logging.basicConfig(level=logging.WARNING)
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+
+logger = logging.getLogger("api")
 
 
 @asynccontextmanager
@@ -93,6 +95,15 @@ async def stop_process_audio(
         temporal_client=client, workflow_id=f"{workflow_id}"
     )
 
+@app.delete("/process/{workflow_id}")
+async def delete_process_audio(
+    workflow_id: uuid.UUID,
+    client: Client = Depends(get_temporal_client),
+    db: AsyncSession = Depends(get_db),
+):
+    await workflow_service.delete_workflow(
+        db=db, temporal_client=client, workflow_id=f"{workflow_id}"
+    )
 
 @app.get("/workflows/{client_id}", response_model=List[ResultModel])
 async def get_workflow_result(

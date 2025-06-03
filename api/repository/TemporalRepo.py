@@ -42,3 +42,15 @@ class TemporalRepository:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e
             )
+
+    async def termiate_workflow(
+        self, temporal_client: Client, workflow_id: uuid.UUID
+    ) -> None:
+        try:
+            await temporal_client.get_workflow_handle(
+                workflow_id=f"{workflow_id}"
+            ).terminate(reason="Terminated by User.")
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e
+            )

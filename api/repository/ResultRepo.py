@@ -1,6 +1,7 @@
 from typing import List, Optional
+from uuid import UUID
 
-from sqlalchemy import and_, select, update
+from sqlalchemy import and_, delete, select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -95,3 +96,21 @@ class ResultRepository:
         except Exception as e:
             await db.rollback()
             raise Exception(str(e))
+
+    async def delete(
+        self, db: AsyncSession, workflow_id: UUID
+    ) -> None:
+        try:
+            await db.execute(
+                delete(Result)
+                .where(Result.workflow_id == workflow_id)
+            )
+            await db.commit()
+            return
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise SQLAlchemyError(str(e))
+        except Exception as e:
+            await db.rollback()
+            raise Exception(str(e))
+

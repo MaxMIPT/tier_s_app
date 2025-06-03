@@ -1,8 +1,9 @@
 import datetime
 
 from typing import Optional
+from uuid import UUID
 
-from sqlalchemy import select, and_
+from sqlalchemy import and_, delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -52,6 +53,18 @@ class TaskRepository:
             result = await db.execute(query)
             orm_result = result.scalars().all()
             return [TaskModel.model_validate(obj) for obj in orm_result]
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise SQLAlchemyError(str(e))
+        except Exception as e:
+            await db.rollback()
+            raise Exception(str(e))
+
+    async def delete(self, db: AsyncSession, workflow_id: UUID) -> None:
+        try:
+            query = delete(Task).where(Task.workflow_id == workflow_id)
+            await db.execute(query)
+            await db.commit()
         except SQLAlchemyError as e:
             await db.rollback()
             raise SQLAlchemyError(str(e))
