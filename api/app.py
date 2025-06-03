@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import uuid
 
 from contextlib import asynccontextmanager
@@ -23,14 +22,12 @@ from temporalio.client import Client
 from clients import get_db, get_temporal_client, minio_client
 from config import settings
 from db import init_db
+from app_logging import setup_logger
 from services import minio_service, workflow_service
 from schemas import ResultModel, ResultStatus, TaskModel, TaskStatus
 
 
-logging.basicConfig(level=logging.WARNING)
-logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
-
-logger = logging.getLogger("api")
+setup_logger()
 
 
 @asynccontextmanager
@@ -192,9 +189,10 @@ async def websocket_endpoint(ws: WebSocket, client_id: str):
             if not clients[client_id]:
                 continue
 
-            for conn, websocket in clients[client_id].items():
+            for conn, websocket in clients[client_id].copy().items():
                 await websocket.send_text(data.json())
                 if data.status == "finished":
+                    websocket.close()
                     del clients[client_id][conn]
 
             last_date = data.created_at
