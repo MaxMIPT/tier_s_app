@@ -7,8 +7,8 @@ from sqlalchemy import and_, delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db_models.task import Task
-from schemas import TaskModel
+from db_models import Task, Result
+from schemas import TaskModel, Task_x_Result
 
 
 class TaskRepository:
@@ -53,6 +53,53 @@ class TaskRepository:
             result = await db.execute(query)
             orm_result = result.scalars().all()
             return [TaskModel.model_validate(obj) for obj in orm_result]
+        except SQLAlchemyError as e:
+            await db.rollback()
+            raise SQLAlchemyError(str(e))
+        except Exception as e:
+            await db.rollback()
+            raise Exception(str(e))
+
+    async def get_task_with_result(
+        self,
+        db: AsyncSession,
+        client_id: str,
+        workflow_id: Optional[str] = None,
+        date_filter: Optional[datetime.datetime] = None,
+    ) -> Optional[list[Task_x_Result]]:
+        conditions = [Task.client_id == client_id]
+        if workflow_id:
+            conditions.append(Task.workflow_id == workflow_id)
+
+        if date_filter:
+            conditions.append(Task.created_at > date_filter)
+
+        query = (
+            select(
+                Task.id,
+                Task.client_id,
+                Task.workflow_id,
+                Task.status,
+                Task.created_at,
+                Result.original_file.label("original_file_url"),
+                Result.status.label("pipeline_status"),
+                Result.converted_file.label("process_converted_file_url"),
+                Result.restored_text.label("process_transcripted_text"),
+                Result.voiced_text.label("process_dubbed_file_url")
+            ).select_from(Task).outerjoin(
+                Result,
+                and_(
+                    Task.client_id == Result.client_id,
+                    Task.workflow_id == Result.workflow_id
+                )
+            ).where(and_(*conditions)).order_by(
+                Task.created_at.asc()
+            )
+        )
+        try:
+            result = await db.execute(query)
+            orm_result = result.fetchall()
+            return [Task_x_Result.model_validate(arg) for arg in orm_result]
         except SQLAlchemyError as e:
             await db.rollback()
             raise SQLAlchemyError(str(e))

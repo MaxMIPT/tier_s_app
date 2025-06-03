@@ -59,6 +59,20 @@ class WorkflowService:
             date_filter=date_filter,
         )
 
+    async def get_tasks_with_result(
+        self,
+        db: AsyncSession,
+        client_id: str,
+        workflow_id: Optional[str] = None,
+        date_filter: Optional[datetime.datetime] = None,
+    ):
+        return await self.task_repo.get_task_with_result(
+            db=db,
+            client_id=client_id,
+            workflow_id=workflow_id,
+            date_filter=date_filter,
+        )
+
     # Temporal workflow
     async def start_workflow(
         self,

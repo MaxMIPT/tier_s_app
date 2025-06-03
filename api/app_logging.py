@@ -23,11 +23,11 @@ def setup_logger():
         },
         "loggers": {
             "sqlalchemy.engine": {"level": "WARNING"},
-            "uvicorn": {"level": "ERROR"},
+            "uvicorn": {"level": "INFO"},
             "uvicorn.error": {"level": "ERROR"},
             "uvicorn.access": {"level": "WARNING"},
             "asyncpg": {"level": "ERROR"},
-            "httpx": {"level": "WARNING"},
+            "httpx": {"level": "INFO"},
         },
     })
     # return logging.getLogger("api")

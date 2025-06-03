@@ -18,17 +18,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from temporalio.client import Client
 
 
-from app_logging import setup_logger
+from app_logging import setup_logger, logging
 from clients import get_db, get_temporal_client, minio_client
 from config import settings
 from db import init_db
 from services import minio_service, workflow_service
 from schemas import ResultModel, ResultStatus, TaskModel, TaskStatus
-from utils import clients, listen_db
+
+from broadcaster import broadcast, send_pings, stop_broadcast
+from websocket_broadcast import websocket_broadcast_handler
 
 
 setup_logger()
 
+logger = logging.getLogger("websocket")
+logger.setLevel(logging.INFO)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,8 +41,10 @@ async def lifespan(app: FastAPI):
     )
     await init_db()
     await create_bucket(bucket_name=settings.minio.bucket_name)
-    asyncio.create_task(listen_db())
+    asyncio.create_task(broadcast(logger))
+    asyncio.create_task(send_pings())
     yield
+    await stop_broadcast(logger)
 
 
 app = FastAPI(lifespan=lifespan)
@@ -167,22 +173,5 @@ async def upload_file(
 
 
 @app.websocket("/ws/{client_id}")
-async def websocket_endpoint(ws: WebSocket, client_id: str):
-    await ws.accept()
-    connection_id = str(uuid.uuid4())
-
-    if client_id not in clients:
-        clients[client_id] = dict()
-
-    clients[client_id][connection_id] = ws
-
-    try:
-        while True:
-            await asyncio.sleep(1)
-
-    except Exception:
-        pass
-    finally:
-        if (client_id in clients.keys()
-                and connection_id in clients[client_id].keys()):
-            del clients[client_id][connection_id]
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    await websocket_broadcast_handler(websocket, client_id, logger)

@@ -49,8 +49,21 @@ class UpdateResultModel(BaseSchema):
 
 
 class TaskModel(BaseSchema):
-
     client_id: str
     workflow_id: UUID
     status: TaskStatus
     created_at: datetime.datetime = datetime.datetime.now()
+
+
+class Task_x_Result(BaseSchema):
+    id: int
+    client_id: str
+    workflow_id: UUID
+    status: TaskStatus
+    created_at: datetime.datetime = datetime.datetime.now()
+    original_file_url: Optional[str] = (None,)
+    pipeline_status: ResultStatus
+    process_converted_file_url: Optional[str] = (None,)
+    process_transcripted_text: Optional[str] = (None,)
+    process_dubbed_file_url: Optional[str] = (None,)
+
