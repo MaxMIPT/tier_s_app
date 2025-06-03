@@ -1,4 +1,6 @@
+import filetype
 import uuid
+
 from io import BytesIO
 
 from aiobotocore.session import ClientCreatorContext
@@ -16,6 +18,7 @@ class MinioRepository:
     async def upload_file(
         self, minio_client: ClientCreatorContext, file: BytesIO, filename: str
     ) -> str:
+        # content_type = filetype.guess(file.getvalue())
         object_name = str(uuid.uuid4()) + "." + filename.split(".")[-1]
         try:
             async with minio_client as client:

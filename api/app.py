@@ -34,6 +34,8 @@ setup_logger()
 logger = logging.getLogger("websocket")
 logger.setLevel(logging.INFO)
 
+# TODO: corsssss
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.temporal_client = await Client.connect(  # noqa
