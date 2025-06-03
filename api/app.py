@@ -180,7 +180,7 @@ async def websocket_endpoint(ws: WebSocket, client_id: str):
     last_date = datetime.now()
     db_client = await anext(get_db())
     while True:
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.5)
         data_list = await workflow_service.get_tasks(
             db=db_client, client_id=client_id, date_filter=last_date
         )
