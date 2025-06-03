@@ -1,13 +1,18 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
-WORKDIR /audio_to_text_service
+WORKDIR /app
 
 COPY pyproject.toml .
 
-RUN pip install poetry
+RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
+RUN pip install poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-root
+RUN pip install pathlib transformers peft torch torchaudio
+RUN transformers-cli download openai/whisper-small
+RUN pip install soundfile
 
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-root
+COPY whisper-small-lora-ru .
 
 COPY . .
 
