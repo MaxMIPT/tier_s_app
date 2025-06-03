@@ -96,6 +96,7 @@ async def stop_process_audio(
         temporal_client=client, workflow_id=f"{workflow_id}"
     )
 
+
 @app.delete("/process/{workflow_id}")
 async def delete_process_audio(
     workflow_id: uuid.UUID,
@@ -105,6 +106,7 @@ async def delete_process_audio(
     await workflow_service.delete_workflow(
         db=db, temporal_client=client, workflow_id=f"{workflow_id}"
     )
+
 
 @app.get("/workflows/{client_id}", response_model=List[ResultModel])
 async def get_workflow_result(

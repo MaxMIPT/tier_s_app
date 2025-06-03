@@ -114,4 +114,3 @@ class ResultRepository:
         except Exception as e:
             await db.rollback()
             raise Exception(str(e))
-

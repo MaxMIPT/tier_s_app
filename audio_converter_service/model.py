@@ -7,11 +7,13 @@ async def audio_converter(
     file_bytes: bytes,
     file_extension: str = ".wav"
 ) -> bytes | None:
-    with tempfile.NamedTemporaryFile(suffix=file_extension, delete=False) as tmp_input:
+    with tempfile.NamedTemporaryFile(
+            suffix=file_extension, delete=False) as tmp_input:
         tmp_input.write(file_bytes)
         tmp_input_path = tmp_input.name
 
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_output:
+    with tempfile.NamedTemporaryFile(
+            suffix=".wav", delete=False) as tmp_output:
         tmp_output_path = tmp_output.name
 
     try:
@@ -24,7 +26,9 @@ async def audio_converter(
             tmp_output_path
         ]
 
-        subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(
+            cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
 
         with open(tmp_output_path, "rb") as f:
             output_bytes = f.read()

@@ -92,7 +92,7 @@ jobs:
 
       - name: Run ruff
         working-directory: api
-        run: poetry run ruff check .
+        run: poetry run ruff check . --exclude api/venv --per-file-ignores '__init__.py:F401'
 
   test:
     needs: [ lint-flake8, lint-ruff ]
