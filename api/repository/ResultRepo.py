@@ -53,7 +53,7 @@ class ResultRepository:
 
     async def insert(
         self, db: AsyncSession, resultSchema: ResultModel
-    ) -> None:
+    ) -> ResultModel | None:
         try:
             obj = Result(
                 workflow_id=resultSchema.workflow_id,
@@ -66,7 +66,8 @@ class ResultRepository:
             )
             db.add(obj)
             await db.commit()
-            return
+            await db.refresh(obj)
+            return ResultModel.model_validate(obj)
         except SQLAlchemyError as e:
             await db.rollback()
             raise SQLAlchemyError(str(e))

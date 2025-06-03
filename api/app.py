@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-@app.post("/process")
+@app.post("/process", response_model=ResultModel)
 async def upload_and_process_audio(
     client_id: str,
     file: UploadFile = File(...),
@@ -76,7 +76,7 @@ async def upload_and_process_audio(
         ),
     )
 
-    await workflow_service.create_result(
+    result = await workflow_service.create_result(
         db=db,
         schema=ResultModel(
             workflow_id=workflow_id,
@@ -85,6 +85,7 @@ async def upload_and_process_audio(
             status=ResultStatus.running,
         ),
     )
+    return result
 
 
 @app.post("/process/stop/{workflow_id}")

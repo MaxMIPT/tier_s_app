@@ -21,9 +21,8 @@ class WorkflowService:
     # Results
     async def create_result(
         self, db: AsyncSession, schema: ResultModel
-    ) -> None:
-        await self.result_repo.insert(db, schema)
-        return
+    ) -> ResultModel | None:
+        return await self.result_repo.insert(db, schema)
 
     async def get_result(
         self,
