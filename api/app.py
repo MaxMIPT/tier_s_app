@@ -2,7 +2,6 @@ import asyncio
 import uuid
 
 from contextlib import asynccontextmanager
-from datetime import datetime
 from typing import List, Optional
 
 from fastapi import (
@@ -19,12 +18,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from temporalio.client import Client
 
 
+from app_logging import setup_logger
 from clients import get_db, get_temporal_client, minio_client
 from config import settings
 from db import init_db
-from app_logging import setup_logger
 from services import minio_service, workflow_service
 from schemas import ResultModel, ResultStatus, TaskModel, TaskStatus
+from utils import clients, listen_db
 
 
 setup_logger()
@@ -37,6 +37,7 @@ async def lifespan(app: FastAPI):
     )
     await init_db()
     await create_bucket(bucket_name=settings.minio.bucket_name)
+    asyncio.create_task(listen_db())
     yield
 
 
@@ -165,34 +166,23 @@ async def upload_file(
     return file_url
 
 
-clients = {}
-
-
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(ws: WebSocket, client_id: str):
     await ws.accept()
     connection_id = str(uuid.uuid4())
 
-    if client_id not in clients.keys():
+    if client_id not in clients:
         clients[client_id] = dict()
 
     clients[client_id][connection_id] = ws
-    last_date = datetime.now()
-    db_client = await anext(get_db())
-    while True:
-        await asyncio.sleep(0.5)
-        data_list = await workflow_service.get_tasks(
-            db=db_client, client_id=client_id, date_filter=last_date
-        )
 
-        for data in data_list:
-            if not clients[client_id]:
-                continue
+    try:
+        while True:
+            await asyncio.sleep(1)
 
-            for conn, websocket in clients[client_id].copy().items():
-                await websocket.send_text(data.json())
-                if data.status == "finished":
-                    websocket.close()
-                    del clients[client_id][conn]
-
-            last_date = data.created_at
+    except Exception:
+        pass
+    finally:
+        if (client_id in clients.keys()
+                and connection_id in clients[client_id].keys()):
+            del clients[client_id][connection_id]
