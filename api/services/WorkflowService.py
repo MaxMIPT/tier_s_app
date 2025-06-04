@@ -27,11 +27,10 @@ class WorkflowService:
     async def get_result(
         self,
         db: AsyncSession,
-        client_id: str,
-        workflow_id: Optional[str] = None,
+        client_id: str
     ) -> List[ResultModel]:
         return await self.result_repo.get(
-            db=db, client_id=client_id, workflow_id=workflow_id
+            db=db, client_id=client_id
         )
 
     async def update_result(

@@ -143,11 +143,10 @@ async def delete_process_audio(
 @app.get("/workflows/{client_id}", response_model=List[ResultModel])
 async def get_workflow_result(
     client_id: str,
-    workflow_id: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     return await workflow_service.get_result(
-        db=db, client_id=client_id, workflow_id=workflow_id
+        db=db, client_id=client_id
     )
 
 
