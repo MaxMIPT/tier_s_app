@@ -5,7 +5,7 @@ description = "FastAPI-based application service for project"
 authors = ["Max Pogrebnykh <pogrebnykh.max@yandex.ru>"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 fastapi = "^0.110"
 uvicorn = "^0.27"
 python-multipart = "^0.0.6"

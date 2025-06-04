@@ -16,7 +16,7 @@ async def convert_file(file_path: str):
     file_name = file_path[:file_path.rfind(".")]
     file_extension = file_path[file_path.rfind("."):]
 
-    converted_file: bytes = await model.audio_converter(
+    converted_file, audio_duration = await model.audio_converter(
         file_bytes=file_bytes,
         file_extension=file_extension
     )
@@ -24,4 +24,7 @@ async def convert_file(file_path: str):
     converted_file_name = await file_service.upload_file(
         file=converted_file, filename=f"converted_{file_name}.wav"
     )
-    return converted_file_name
+    return {
+        "filename": converted_file_name,
+        "duration": audio_duration
+    }

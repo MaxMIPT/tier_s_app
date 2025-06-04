@@ -28,15 +28,26 @@ async def websocket_broadcast_handler(websocket: WebSocket, client_id: str, logg
     try:
         async def send_loop():
             while True:
-                data = await channel.get()
-                if isinstance(data, TaskEventData):
-                    await websocket.send_json(data.dict())
-                elif isinstance(data, TaskEventPing):
-                    await websocket.send_json({"type": "ping"})
+                try:
+                    data = await channel.get()
+                    if isinstance(data, TaskEventData):
+                        await websocket.send_json(
+                            {
+                                "type": "workflow",
+                                "data": data.model_dump()
+                            }
+                        )
+                    elif isinstance(data, TaskEventPing):
+                        await websocket.send_json({"type": "ping"})
+                except RuntimeError:
+                    pass
 
         async def receive_loop():
             while True:
-                await websocket.receive_text()
+                try:
+                    await websocket.receive_text()
+                except RuntimeError:
+                    pass
 
         await asyncio.gather(send_loop(), receive_loop())
 
@@ -45,6 +56,10 @@ async def websocket_broadcast_handler(websocket: WebSocket, client_id: str, logg
     except Exception as e:
         logger.error(f"Ошибка WebSocket: {e}")
     finally:
-        await websocket.close()
+        try:
+            await websocket.close()
+        except RuntimeError:
+            pass
+
         websocket_clients.pop(connection_id, None)
         logger.info(f"Клиент отключён: {client_id}")

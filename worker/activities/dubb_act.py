@@ -12,4 +12,4 @@ async def create_audio(text_: str) -> dict:
             f"{settings.AUDIO_API}/audio", params=dict(text_=text_)
         )
 
-    return {"status": "running", "voiced_text": audio_response.json()}
+    return {"status": "running", "dubbed_file": audio_response.json()}

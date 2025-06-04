@@ -1,9 +1,10 @@
 import asyncio
+import uuid
 
 from datetime import datetime
 from typing import Optional, Dict, Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from services import workflow_service
 from clients import get_db
@@ -12,22 +13,23 @@ from clients import get_db
 websocket_clients: Dict[str, Dict[str, Any]] = {}
 
 
-class TaskEventItem(BaseModel):
-    id: str
+class ResultEventData(BaseModel):
+    workflow_id: str
     client_id: str
-    task_hash: Optional[str] = None
-    original_file_url: str
-    pipeline_status: str
-    task_status: str
-    process_converted_file_url: Optional[str] = None
-    process_audio_duration_sec: Optional[int] = None
-    process_dubbed_file_url: Optional[str] = None
-    process_transcripted_text: Optional[str] = None
+    original_file: str | None = Field(None)
+    original_file_name: str | None = Field(None)
+    converted_file: str | None = Field(None)
+    converted_file_duration: float | None = Field(None)
+    restored_text: str | None = Field(None)
+    dubbed_file: str | None = Field(None)
+    status: str
+    task_status: str | None = Field(None)
+    created_at: str
 
 
 class TaskEventData(BaseModel):
     task_log_id: int
-    task: TaskEventItem
+    workflow: ResultEventData
     created_at: str
 
 
@@ -54,19 +56,20 @@ async def broadcast(logger):
 
             for data in data_list:
                 task_event = TaskEventData(
-                    task_log_id=data.id,
+                    task_log_id=data.task_log_id,
                     created_at=str(data.created_at),
-                    task=TaskEventItem(
-                        id=str(data.workflow_id),
+                    workflow=ResultEventData(
+                        workflow_id=str(data.workflow_id),
                         client_id=str(data.client_id),
-                        # task_hash=data.task_hash,
-                        original_file_url=data.original_file_url,
-                        pipeline_status=data.pipeline_status,
-                        task_status=data.status,
-                        process_converted_file_url=data.process_converted_file_url,
-                        # process_audio_duration_sec=data.process_audio_duration_sec,
-                        process_dubbed_file_url=data.process_dubbed_file_url,
-                        process_transcripted_text=data.process_transcripted_text,
+                        original_file=data.original_file,
+                        original_file_name=data.original_file_name,
+                        converted_file=data.converted_file,
+                        converted_file_duration=data.converted_file_duration,
+                        restored_text=data.restored_text,
+                        dubbed_file=data.dubbed_file,
+                        status=data.status,
+                        task_status=data.task_status,
+                        created_at=str(data.result_created_at)
                     )
                 )
 

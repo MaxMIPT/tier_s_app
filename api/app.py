@@ -62,7 +62,7 @@ app.add_middleware(
 )
 
 
-@app.post("/process", response_model=ResultModel)
+@app.post("/process", response_model=dict)
 async def upload_and_process_audio(
     client_id: str,
     file: UploadFile = File(...),
@@ -111,10 +111,13 @@ async def upload_and_process_audio(
             workflow_id=workflow_id,
             client_id=client_id,
             original_file=file_url,
+            original_file_name=file.filename,
             status=ResultStatus.running,
         ),
     )
-    return result
+    return {
+        "workflow_id": result.workflow_id
+    }
 
 
 @app.post("/process/stop/{workflow_id}")

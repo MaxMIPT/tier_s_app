@@ -76,16 +76,19 @@ class TaskRepository:
 
         query = (
             select(
-                Task.id,
+                Task.id.label("task_log_id"),
                 Task.client_id,
                 Task.workflow_id,
-                Task.status,
+                Task.status.label("task_status"),
                 Task.created_at,
-                Result.original_file.label("original_file_url"),
-                Result.status.label("pipeline_status"),
-                Result.converted_file.label("process_converted_file_url"),
-                Result.restored_text.label("process_transcripted_text"),
-                Result.voiced_text.label("process_dubbed_file_url")
+                Result.original_file,
+                Result.original_file_name,
+                Result.status.label("status"),
+                Result.converted_file,
+                Result.converted_file_duration,
+                Result.restored_text,
+                Result.dubbed_file,
+                Result.created_at.label("result_created_at")
             ).select_from(Task).outerjoin(
                 Result,
                 and_(

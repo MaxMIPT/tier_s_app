@@ -34,18 +34,23 @@ class ResultModel(BaseSchema):
     workflow_id: UUID | None
     client_id: str
     original_file: str | None = Field(None)
+    original_file_name: str | None = Field(None)
     converted_file: str | None = Field(None)
+    converted_file_duration: float | None = Field(None)
     restored_text: str | None = Field(None)
-    voiced_text: str | None = Field(None)
+    dubbed_file: str | None = Field(None)
     status: ResultStatus
+    task_status: TaskStatus | None = Field(None)
+    created_at: datetime.datetime = datetime.datetime.now()
 
 
 class UpdateResultModel(BaseSchema):
     workflow_id: UUID
     status: ResultStatus
     converted_file: Optional[str] = (None,)
+    converted_file_duration: Optional[float] = (None,)
     restored_text: Optional[str] = (None,)
-    voiced_text: Optional[str] = None
+    dubbed_file: Optional[str] = None
 
 
 class TaskModel(BaseSchema):
@@ -56,13 +61,16 @@ class TaskModel(BaseSchema):
 
 
 class Task_x_Result(BaseSchema):
-    id: int
+    task_log_id: int
+    workflow_id: UUID | None
     client_id: str
-    workflow_id: UUID
-    status: TaskStatus
+    original_file: str | None = Field(None)
+    original_file_name: str | None = Field(None)
+    converted_file: str | None = Field(None)
+    converted_file_duration: float | None = Field(None)
+    restored_text: str | None = Field(None)
+    dubbed_file: str | None = Field(None)
+    status: ResultStatus
+    task_status: TaskStatus | None = Field(None)
+    result_created_at: datetime.datetime = datetime.datetime.now()
     created_at: datetime.datetime = datetime.datetime.now()
-    original_file_url: Optional[str] = (None,)
-    pipeline_status: ResultStatus
-    process_converted_file_url: Optional[str] = (None,)
-    process_transcripted_text: Optional[str] = (None,)
-    process_dubbed_file_url: Optional[str] = (None,)

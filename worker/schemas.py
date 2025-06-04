@@ -29,9 +29,11 @@ class ResultModel(BaseSchema):
     workflow_id: str | None
     client_id: str
     original_file: str | None = Field(None)
+    original_file_name: str | None = Field(None)
     converted_file: str | None = Field(None)
+    converted_file_duration: float | None = Field(None)
     restored_text: str | None = Field(None)
-    voiced_text: str | None = Field(None)
+    dubbed_file: str | None = Field(None)
     status: ResultStatus
 
 
