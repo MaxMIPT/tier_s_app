@@ -28,6 +28,7 @@ class Settings(BaseModel):
     minio: MinioConfig
     DATABASE_URL: str
     RUN_WORKFLOW_TASK_QUEUE_NAME: str = "RUN_WORKFLOW_TASK"
+    TEMPORAL_SERVICE: str
 
 
 settings = Settings(
@@ -48,4 +49,5 @@ settings = Settings(
     RUN_WORKFLOW_TASK_QUEUE_NAME=os.environ.get(
         "RUN_WORKFLOW_TASK_QUEUE_NAME"
     ),
+    TEMPORAL_SERVICE=os.environ.get("TEMPORAL_SERVICE")
 )

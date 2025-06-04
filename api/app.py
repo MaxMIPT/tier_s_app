@@ -41,7 +41,7 @@ setup_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.temporal_client = await Client.connect(  # noqa
-        "temporal:7233", namespace="default"
+        f"{settings.TEMPORAL_SERVICE}", namespace="default"
     )
     await init_db()
     await create_bucket(bucket_name=settings.minio.bucket_name)
