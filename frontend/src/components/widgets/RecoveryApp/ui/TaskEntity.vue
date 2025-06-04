@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { useModalConfirm } from '~/components/shared/modals/Confirm/useModalConfirm';
 import { useTaskStore } from '~/domain/recoveryService';
-import { TaskStatus, TaskStatusText, type ITask } from '~/domain/recoveryService/model/types/task';
+import { removeWorkflow } from '~/domain/recoveryService/hooks/removeWorkflow';
+import { PipelineStatus, TaskStatus, TaskStatusText, type IWorkflow } from '~/domain/recoveryService/model/types/workflow';
 
-const props = defineProps<{ task: ITask }>();
+const props = defineProps<{ task: IWorkflow }>();
 
 const taskStore = useTaskStore();
 
 const progress = computed(() => {
-    switch (props.task.status) {
+    switch (props.task.task_status) {
         case TaskStatus.Created:
             return 10;
         case TaskStatus.AudioConversionStarted:
@@ -31,6 +32,7 @@ const progress = computed(() => {
 });
 
 const formatDuration = (value: number) => {
+    value = Math.round(value);
     const hours = Math.floor(value / 3600);
     const minutes = Math.floor((value % 3600) / 60);
     const seconds = value % 60;
@@ -44,7 +46,7 @@ const remove = () => {
     const confirmModal = useModalConfirm({
         slot: 'Вы действительно хотите удалить задачу?',
         onConfirm: () => {
-            taskStore.remove(props.task.id);
+            removeWorkflow(props.task.workflow_id);
         },
     });
     confirmModal.open();
@@ -77,45 +79,62 @@ const remove = () => {
                 </div>
             </div>
             <div :class="$style.file_name">
-                <div :class="$style.name">{{ task.file_name }}</div>
-                <div :class="$style.duration">{{ formatDuration(task.audio_length_sec) }}</div>
+                <div :class="$style.name">{{ task.original_file_name }}</div>
+                <div
+                    v-if="task.converted_file_duration"
+                    :class="$style.duration"
+                >
+                    {{ formatDuration(task.converted_file_duration) }}
+                </div>
             </div>
             <div :class="$style.status">
-                <template v-if="task.is_process_finished_with_error"> Процесс завершился с ошибкой. Попробуйте повторить запрос </template>
+                <template v-if="task.status === PipelineStatus.Failed">
+                    Процесс завершился с ошибкой. Попробуйте повторить запрос
+                </template>
                 <template v-else>
-                    {{ TaskStatusText[task.status] }}
+                    {{ TaskStatusText[task.task_status] }}
                 </template>
             </div>
             <div :class="$style.result">
                 <div :class="$style.dub_link">
-                    <span :class="$style.title">Ссылка на озвучку:</span>
-                    <template v-if="task.audio_dub_url">
-                        <a
-                            :href="task.audio_dub_url"
-                            target="_blank"
-                        >
-                            {{ task.audio_dub_url }}
-                        </a>
+                    <span :class="$style.title">Озвучка:</span>
+                    <template v-if="task.dubbed_file">
+                        <div :class="$style.player">
+                            <audio controls>
+                                <source
+                                    :src="`${$config.public.storageBase}/${task.dubbed_file}`"
+                                    type="audio/mp3"
+                                />
+                            </audio>
+                        </div>
+                        <div :class="$style.link">
+                            <a
+                                :href="`${$config.public.storageBase}/${task.dubbed_file}`"
+                                target="_blank"
+                            >
+                                Скачать mp3-файл
+                            </a>
+                        </div>
                     </template>
                     <template v-else>
-                        <template v-if="task.is_process_finished_with_error">ошибка</template>
+                        <template v-if="task.status === PipelineStatus.Failed">ошибка</template>
                         <template v-else>обрабатывается...</template>
                     </template>
                 </div>
                 <div :class="$style.transcription">
                     <span :class="$style.title">Транскрипция:</span>
-                    <template v-if="task.audio_transcription">
-                        <div :class="$style.text">{{ task.audio_transcription }}</div>
+                    <template v-if="task.restored_text">
+                        <div :class="$style.text">{{ task.restored_text }}</div>
                     </template>
                     <template v-else>
-                        <template v-if="task.is_process_finished_with_error">ошибка</template>
+                        <template v-if="task.status === PipelineStatus.Failed">ошибка</template>
                         <template v-else>обрабатывается...</template>
                     </template>
                 </div>
             </div>
         </div>
         <div :class="$style.progress">
-            <template v-if="!task.is_process_finished">
+            <template v-if="task.status === PipelineStatus.Running">
                 <div :class="$style.progress_bar">
                     <div :style="{ width: progress + '%' }"></div>
                 </div>
@@ -218,9 +237,19 @@ const remove = () => {
                 color: var(--font-color-4);
             }
 
-            > a {
-                color: var(--color-1);
-                text-decoration: underline;
+            > .player {
+                margin-top: 5px;
+                > audio {
+                    width: 100%;
+                }
+            }
+
+            > .link {
+                margin-top: 10px;
+                > a {
+                    color: var(--color-1);
+                    text-decoration: underline;
+                }
             }
         }
 

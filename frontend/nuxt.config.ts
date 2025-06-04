@@ -88,6 +88,9 @@ const config: InputConfig<NuxtConfig, ConfigLayerMeta> = {
     runtimeConfig: {
         public: {
             apiBase: '',
+            apiWs: '',
+            apiWsProtocol: '',
+            storageBase: '',
         },
     },
     googleFonts: {

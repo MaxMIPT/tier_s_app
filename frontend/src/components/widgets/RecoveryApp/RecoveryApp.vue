@@ -2,7 +2,8 @@
 import { WidgetRecoveryAppUiTaskEntity } from '#components';
 import type { IRecordResult, LoadType } from './model/types/types';
 import { addNewTask, useTaskStore } from '~/domain/recoveryService';
-import { v4 as uuidv4 } from 'uuid';
+import { uploadWorkflow } from '~/domain/recoveryService/api/uploadWorkflow';
+import { StandartErrorList } from '~/shared/errors/errors';
 
 const taskStore = useTaskStore();
 
@@ -15,20 +16,36 @@ const setLoadType = (value: LoadType) => {
     loadType.value = value;
 };
 
-const onAudioRecordLoad = (data: IRecordResult) => {
+const onAudioRecordLoad = async (data: IRecordResult) => {
     isLoading.value = true;
-    setTimeout(() => {
+    try {
+        const response = await uploadWorkflow(data.blob, data.name);
+        addNewTask(response.workflow_id, data.name);
+    } catch (e) {
+        if (e instanceof StandartErrorList) {
+            console.log(e);
+        } else {
+            console.log(e);
+        }
+    } finally {
         isLoading.value = false;
-        addNewTask(uuidv4(), data.name);
-    }, 1000);
+    }
 };
 
-const onAudioFileLoad = (data: File) => {
+const onAudioFileLoad = async (data: File) => {
     isLoading.value = true;
-    setTimeout(() => {
+    try {
+        const response = await uploadWorkflow(data, data.name);
+        addNewTask(response.workflow_id, data.name);
+    } catch (e) {
+        if (e instanceof StandartErrorList) {
+            console.log(e);
+        } else {
+            console.log(e);
+        }
+    } finally {
         isLoading.value = false;
-        addNewTask(uuidv4(), data.name);
-    }, 1000);
+    }
 };
 </script>
 

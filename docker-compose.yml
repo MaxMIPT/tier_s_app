@@ -4,11 +4,21 @@ services:
         depends_on:
             - minio
             - api
+            - frontend-client
         volumes:
             - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
         restart: always
         ports:
             - "${NGINX_PORT:-80}:80"
+
+    frontend-client:
+        build: ./frontend
+        restart: on-failure
+        environment:
+            - NUXT_PUBLIC_API_BASE=/api
+            - NUXT_PUBLIC_STORAGE_BASE=/uploads
+            - NUXT_PUBLIC_API_WS=
+            - NUXT_PUBLIC_API_WS_PROTOCOL=ws
 
     postgres:
         image: postgres:15

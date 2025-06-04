@@ -22,14 +22,22 @@ export const TaskStatusText = {
     [TaskStatus.Canceled]: 'Отменено',
 };
 
-export interface ITask {
-    id: string;
-    file_name: string;
-    status: TaskStatus;
-    is_process_finished: boolean;
-    is_process_finished_with_error: boolean;
+export enum PipelineStatus {
+    Running = 'running',
+    Success = 'success',
+    Failed = 'failed',
+}
+
+export interface IWorkflow {
+    workflow_id: string;
+    original_file: string | null;
+    original_file_name: string;
+    status: PipelineStatus;
+    converted_file: string | null;
+    converted_file_duration: number | null;
+    dubbed_file: string | null;
+    restored_text: string | null;
+    task_status: TaskStatus;
+
     created_at: Date;
-    audio_length_sec: number;
-    audio_dub_url: string;
-    audio_transcription: string;
 }
