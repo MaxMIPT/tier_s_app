@@ -30,4 +30,3 @@ def setup_logger():
             "httpx": {"level": "INFO"},
         },
     })
-    # return logging.getLogger("api")

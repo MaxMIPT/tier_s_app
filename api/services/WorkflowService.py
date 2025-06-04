@@ -4,7 +4,7 @@ import uuid
 from typing import Any, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from temporalio.client import Client
+from temporalio.client import Client, RPCError
 
 from config import settings
 from repository import ResultRepository, TaskRepository, TemporalRepository
@@ -107,9 +107,14 @@ class WorkflowService:
     ) -> None:
         await self.result_repo.delete(db=db, workflow_id=workflow_id)
         await self.task_repo.delete(db=db, workflow_id=workflow_id)
-        await self.workflow_repo.termiate_workflow(
-            temporal_client=temporal_client, workflow_id=workflow_id
-        )
+        try:
+            await self.workflow_repo.termiate_workflow(
+                temporal_client=temporal_client, workflow_id=workflow_id
+            )
+        except Exception as e:
+            # todo: logging
+            pass
+
         return
 
 
