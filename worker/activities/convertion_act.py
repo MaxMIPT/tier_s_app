@@ -2,6 +2,7 @@ from temporalio import activity
 
 from config import settings
 
+
 @activity.defn
 async def convert_audio(file_path: str) -> dict:
     import httpx  # важно
