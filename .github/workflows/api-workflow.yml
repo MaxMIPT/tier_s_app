@@ -68,34 +68,8 @@ jobs:
         working-directory: api
         run: poetry run flake8 . --per-file-ignores="__init__.py:F401" --max-line-length 99
 
-  lint-ruff:
-    needs: setup
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Poetry
-        run: |
-          pip install --upgrade pip
-          pip install poetry==${{ env.POETRY_VERSION }}
-
-      - name: Install dependencies
-        working-directory: api
-        run: |
-          poetry install --no-interaction --no-ansi    
-
-      - name: Run ruff
-        working-directory: api
-        run: poetry run ruff check . --exclude api/venv --per-file-ignores '__init__.py:F401'
-
   test:
-    needs: [ lint-flake8, lint-ruff ]
+    needs: [ lint-flake8 ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

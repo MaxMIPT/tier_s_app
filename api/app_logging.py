@@ -14,12 +14,12 @@ def setup_logger():
             "console": {
                 "class": "logging.StreamHandler",
                 "formatter": "default",
-                "level": "ERROR",
+                "level": "INFO",
             },
         },
         "root": {
             "handlers": ["console"],
-            "level": "ERROR",
+            "level": "INFO",
         },
         "loggers": {
             "sqlalchemy.engine": {"level": "WARNING"},
@@ -30,3 +30,10 @@ def setup_logger():
             "httpx": {"level": "INFO"},
         },
     })
+    sa_logger = logging.getLogger("sqlalchemy.engine")
+    sa_logger.setLevel(logging.WARNING)
+    sa_logger.propagate = False
+
+
+logger = logging.getLogger("api")
+logger.setLevel(logging.INFO)

@@ -1,7 +1,8 @@
 from pathlib import Path
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 from peft import PeftModel
-import torchaudio, torch
+import torchaudio
+import torch
 
 
 BASE_ID = "openai/whisper-small"
@@ -10,7 +11,9 @@ ADAPTER = Path(r"./whisper-small-lora-ru")
 print("mode: ", "cuda" if torch.cuda.is_available() else "cpu")
 
 base = WhisperForConditionalGeneration.from_pretrained(BASE_ID)
-model = PeftModel.from_pretrained(base, ADAPTER, local_files_only=True).to("cuda" if torch.cuda.is_available() else "cpu")
+model = PeftModel.from_pretrained(
+    base, ADAPTER, local_files_only=True
+).to("cuda" if torch.cuda.is_available() else "cpu")
 proc = WhisperProcessor.from_pretrained(BASE_ID)
 
 

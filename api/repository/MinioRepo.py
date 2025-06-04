@@ -15,7 +15,8 @@ class MinioRepository:
         self._mime_detector = magic.Magic(mime=True)
 
     async def upload_file(
-        self, minio_client: ClientCreatorContext, file: bytes, filename: str, mime_type: str | None = None
+        self, minio_client: ClientCreatorContext, file: bytes,
+        filename: str, mime_type: str | None = None
     ) -> str:
         ext = f".{filename.split('.')[-1]}"
 

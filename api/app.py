@@ -22,7 +22,7 @@ from temporalio.client import Client
 from fastapi.middleware.cors import CORSMiddleware
 
 
-from app_logging import setup_logger, logging
+from app_logging import setup_logger, logger
 from clients import get_db, get_temporal_client, minio_client
 from config import settings
 from db import init_db
@@ -37,9 +37,6 @@ mime_detector = magic.Magic(mime=True)
 
 setup_logger()
 
-logger = logging.getLogger("websocket")
-logger.setLevel(logging.INFO)
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -50,6 +47,7 @@ async def lifespan(app: FastAPI):
     await create_bucket(bucket_name=settings.minio.bucket_name)
     asyncio.create_task(broadcast(logger))
     asyncio.create_task(send_pings())
+    logger.info("App started.")
     yield
     await stop_broadcast(logger)
 
@@ -115,6 +113,7 @@ async def upload_and_process_audio(
             status=ResultStatus.running,
         ),
     )
+    logger.info(f"Started process file: {file.filename}")
     return {
         "workflow_id": result.workflow_id
     }
