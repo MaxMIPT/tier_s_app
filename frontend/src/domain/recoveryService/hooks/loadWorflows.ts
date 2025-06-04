@@ -8,7 +8,7 @@ export const loadWorkflows = async () => {
     try {
         const data = await fetchWorkflows();
 
-        data.forEach((item) => {
+        data.toReversed().forEach((item) => {
             taskStore.add(item);
         });
     } catch (e) {

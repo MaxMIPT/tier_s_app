@@ -112,6 +112,12 @@ services:
             - "8003:8003"
         build:
             context: ./audio_to_text_service
+            dockerfile: Dockerfile
+            #dockerfile: Dockerfile_cuda
+        #gpus:
+        #- driver: nvidia
+        #count: all
+        #capabilities: [gpu]
         environment:
             API_URL: "http://api:8000"
 
