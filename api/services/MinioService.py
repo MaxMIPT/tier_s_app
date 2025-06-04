@@ -26,10 +26,10 @@ class MinioService:
         )
 
     async def add_any_file(
-        self, minio_client: ClientCreatorContext, file: bytes, filename: str
+        self, minio_client: ClientCreatorContext, file: bytes, filename: str, mime_type: str | None = None
     ) -> str:
         return await self.repository.upload_file(
-            minio_client=minio_client, file=file, filename=filename
+            minio_client=minio_client, file=file, filename=filename, mime_type=mime_type
         )
 
     async def get_file(

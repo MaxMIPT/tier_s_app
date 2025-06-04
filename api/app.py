@@ -32,7 +32,8 @@ from schemas import ResultModel, ResultStatus, TaskModel, TaskStatus
 from broadcaster import broadcast, send_pings, stop_broadcast
 from websocket_broadcast import websocket_broadcast_handler
 
-import filetype
+import magic
+mime_detector = magic.Magic(mime=True)
 
 setup_logger()
 
@@ -70,17 +71,21 @@ async def upload_and_process_audio(
     db: AsyncSession = Depends(get_db),
 ):
     file_bytes = await file.read()
-    content_type = filetype.guess(file_bytes)
-    if content_type is None or not content_type.mime.startswith("audio/"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Файл не является аудиофайлом",
-        )
+    mime_type = mime_detector.from_buffer(file_bytes)
+    if mime_type is None or not mime_type.startswith("audio/"):
+        if mime_type == "video/webm" and file.content_type == "audio/webm":
+            mime_type = "audio/webm"
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Ожидается аудиофайл, получен: {mime_type or 'неизвестный формат'}",
+            )
 
     file_url = await minio_service.add_any_file(
         minio_client=minio_client,
         file=file_bytes,
-        filename=file.filename
+        filename=file.filename,
+        mime_type=mime_type
     )
     workflow_id = uuid.uuid4()
 

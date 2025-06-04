@@ -5,35 +5,35 @@ from botocore.exceptions import ClientError
 from fastapi import HTTPException, status
 
 from config import settings
-import filetype
+import magic
 
 
 class MinioRepository:
 
     def __init__(self):
         self.bucket_name = settings.minio.bucket_name
+        self._mime_detector = magic.Magic(mime=True)
 
     async def upload_file(
-        self, minio_client: ClientCreatorContext, file: bytes, filename: str
+        self, minio_client: ClientCreatorContext, file: bytes, filename: str, mime_type: str | None = None
     ) -> str:
-        content_type = filetype.guess(file)
-        ext = ""
-        mime = ""
-        if content_type is None:
-            mime = "application/octet-stream"
-            ext = f".{filename.split(".")[-1]}"
-        else:
-            mime = content_type.MIME
-            ext = f".{content_type.EXTENSION}"
+        ext = f".{filename.split('.')[-1]}"
+
+        if mime_type is None:
+            mime_type = self._mime_detector.from_buffer(file)
+
+            if mime_type is None:
+                mime_type = "application/octet-stream"
 
         object_name = str(uuid.uuid4()) + ext
+
         try:
             async with minio_client as client:
                 await client.put_object(
                     Bucket=self.bucket_name,
                     Key=object_name,
                     Body=file,
-                    ContentType=mime,
+                    ContentType=mime_type,
                 )
             return object_name
 
