@@ -16,7 +16,8 @@ async def create_audio(text_: str) -> dict:
 
     async with httpx.AsyncClient() as client:
         audio_response = await client.post(
-            f"{settings.AUDIO_API}/audio", params=dict(text_=text_), timeout=timeout
+            f"{settings.AUDIO_API}/audio",
+            json=dict(text_=text_), timeout=timeout
         )
 
     return {"status": "running", "dubbed_file": audio_response.json()}
