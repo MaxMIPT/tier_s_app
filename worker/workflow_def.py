@@ -36,7 +36,7 @@ class Workflow:
             send_task,
             args=[task.model_dump()],
             task_queue=settings.RUN_WORKFLOW_TASK_QUEUE_NAME,
-            start_to_close_timeout=timedelta(seconds=60),
+            start_to_close_timeout=timedelta(seconds=360),
         )
 
     async def process_result(self, workflow_id: str, client_id: str, **kwargs):
@@ -47,7 +47,7 @@ class Workflow:
             send_result,
             args=[result.model_dump()],
             task_queue=settings.RUN_WORKFLOW_TASK_QUEUE_NAME,
-            start_to_close_timeout=timedelta(seconds=60),
+            start_to_close_timeout=timedelta(seconds=360),
         )
 
     async def model_activity_wrapper(
@@ -66,7 +66,7 @@ class Workflow:
             activity_task,
             args=args,
             task_queue=settings.RUN_WORKFLOW_TASK_QUEUE_NAME,
-            start_to_close_timeout=timedelta(seconds=60),
+            start_to_close_timeout=timedelta(seconds=360),
         )
         await workflow.sleep(30)
         await self.process_task(
